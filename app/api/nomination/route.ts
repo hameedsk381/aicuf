@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
+import { writeFile, mkdir } from "fs/promises"
+import { join } from "path"
+import { existsSync } from "fs"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { RATE_LIMIT } from "@/lib/constants"
 import { logger } from "@/lib/logger"
 import connectDB from "@/lib/db/connect"
 import Nomination from "@/lib/db/models/Nomination"
-import { uploadFile } from "@/lib/minio"
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024
 
@@ -56,18 +58,21 @@ export async function POST(request: NextRequest) {
     const bytes = await nocFile.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
+    const uploadDir = join(process.cwd(), "public", "uploads", "noc")
+    if (!existsSync(uploadDir)) {
+      await mkdir(uploadDir, { recursive: true })
+    }
+
     const timestamp = Date.now()
     const fileExtension = nocFile.name.split(".").pop()
     const fileName = `noc-${timestamp}.${fileExtension}`
-    const contentType = nocFile.type || "application/octet-stream"
+    const filePath = join(uploadDir, fileName)
 
-    // Upload to MinIO
-    const fileUrl = await uploadFile(buffer, fileName, contentType)
+    await writeFile(filePath, buffer)
 
-    logger.info("NOC file uploaded to MinIO", {
+    logger.info("NOC file uploaded", {
       fileName,
       size: nocFile.size,
-      url: fileUrl,
     })
 
     await connectDB()
@@ -77,7 +82,7 @@ export async function POST(request: NextRequest) {
       unitName,
       contestingFor,
       educationQualification,
-      nocFilePath: fileUrl,
+      nocFilePath: `/uploads/noc/${fileName}`,
       nocFileName: nocFile.name,
       status: "pending",
     })
