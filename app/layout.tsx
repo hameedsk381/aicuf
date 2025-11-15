@@ -27,7 +27,7 @@ export const metadata = {
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://aptsaicuf.org",
+    url: "https://aptsaicuf.com",
     siteName: "APTSAICUF",
     title: "APTSAICUF - Empowering Catholic Students Since 1924",
     description: "Join the Andhra-Telangana All India Catholic University Federation. Empowering students through faith, justice, and leadership.",
@@ -61,7 +61,7 @@ export const metadata = {
     google: siteConfig.verification.google,
   },
   alternates: {
-    canonical: "https://aptsaicuf.org",
+    canonical: "https://aptsaicuf.com",
   },
 }
 

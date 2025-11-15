@@ -21,6 +21,8 @@ const nominationSchema = z.object({
     "Treasurer",
     "Social Media Coordinator",
     "Event Coordinator",
+    "National Team Member",
+    "National Council Member",
   ] as const),
   nocFile: z
     .instanceof(FileList)
@@ -201,6 +203,8 @@ export default function NominationForm() {
               "Treasurer",
               "Social Media Coordinator",
               "Event Coordinator",
+              "National Team Member",
+              "National Council Member",
             ].map((position) => (
               <label
                 key={position}

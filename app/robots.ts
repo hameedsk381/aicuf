@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/api/', '/admin/'],
       },
     ],
-    sitemap: 'https://aptsaicuf.org/sitemap.xml',
+    sitemap: 'https://aptsaicuf.com/sitemap.xml',
   }
 }

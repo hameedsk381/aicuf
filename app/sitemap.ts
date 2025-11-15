@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://aptsaicuf.org'
+  const baseUrl = 'https://aptsaicuf.com'
 
   return [
     {

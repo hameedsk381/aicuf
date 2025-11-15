@@ -1,6 +1,6 @@
 export const siteConfig = {
   name: process.env.NEXT_PUBLIC_SITE_NAME || "APTSAICUF",
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://aptsaicuf.org",
+  url: process.env.NEXT_PUBLIC_SITE_URL || "https://aptsaicuf.com",
   description: "Empowering Catholic students in Andhra Pradesh and Telangana to be agents of social change through faith, justice, and leadership since 1924.",
   
   social: {
@@ -9,7 +9,7 @@ export const siteConfig = {
   },
   
   contact: {
-    email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "info@aptsaicuf.org",
+    email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "info@aptsaicuf.com",
     phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || "+91 XXX XXX XXXX",
   },
   
