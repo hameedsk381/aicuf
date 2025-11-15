@@ -17,7 +17,7 @@ import { FORM_CONSTANTS } from "@/lib/constants"
 // Define the form schema
 const formSchema = z.object({
   applicationType: z.enum(["membership", "leadership"], {
-    required_error: "Please select an application type",
+    message: "Please select an application type",
   }),
 
   name: z.string().min(FORM_CONSTANTS.VALIDATION.MIN_NAME_LENGTH, { 
@@ -43,7 +43,7 @@ const formSchema = z.object({
     .regex(/^[0-9]{10,15}$/, { message: "Please enter a valid WhatsApp number (digits only)" }),
   emailId: z.string().email({ message: "Please enter a valid email address" }),
   religion: z.enum(["catholic", "christian", "other"], {
-    required_error: "Please select your religion",
+    message: "Please select your religion",
   }),
   address: z.string().min(FORM_CONSTANTS.VALIDATION.MIN_ADDRESS_LENGTH, { 
     message: `Address must be at least ${FORM_CONSTANTS.VALIDATION.MIN_ADDRESS_LENGTH} characters` 

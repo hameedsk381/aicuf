@@ -8,8 +8,8 @@ interface RateLimitConfig {
 }
 
 const DEFAULT_CONFIG: RateLimitConfig = {
-  interval: RATE_LIMIT.REGISTRATION.INTERVAL,
-  maxRequests: RATE_LIMIT.REGISTRATION.MAX_REQUESTS,
+  interval: RATE_LIMIT.REGISTRATION.interval,
+  maxRequests: RATE_LIMIT.REGISTRATION.maxRequests,
 }
 
 export function checkRateLimit(

@@ -21,9 +21,7 @@ const nominationSchema = z.object({
     "Treasurer",
     "Social Media Coordinator",
     "Event Coordinator",
-  ], {
-    required_error: "Please select a position",
-  }),
+  ] as const),
   nocFile: z
     .instanceof(FileList)
     .refine((files) => files?.length === 1, "NOC from Animator is required")

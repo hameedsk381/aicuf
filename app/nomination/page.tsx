@@ -8,6 +8,8 @@ export const metadata = {
   description: "Submit your nomination for AP-TG State AICUF Leadership positions.",
 }
 
+export const dynamic = 'force-dynamic'
+
 export default function NominationPage() {
   return (
     <div className="flex flex-col min-h-screen bg-white">
