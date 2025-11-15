@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { RATE_LIMIT } from "@/lib/constants"
 import { logger } from "@/lib/logger"
-import connectDB from "@/lib/db/connect"
-import Contact from "@/lib/db/models/Contact"
+import { db, schema } from "@/lib/db"
 import * as z from "zod"
 
 const contactSchema = z.object({
@@ -47,15 +46,13 @@ export async function POST(request: NextRequest) {
       subject: data.subject,
     })
 
-    await connectDB()
-
-    const contact = await Contact.create({
+    const contact = db.insert(schema.contacts).values({
       ...data,
       status: "new",
-    })
+    }).returning().get()
 
     logger.info("Contact saved to database", {
-      id: contact._id,
+      id: contact.id,
     })
 
     return NextResponse.json({

@@ -8,7 +8,6 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - MONGODB_URI=${MONGODB_URI}
       - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
       - NEXT_PUBLIC_SITE_NAME=${NEXT_PUBLIC_SITE_NAME}
       - NEXT_PUBLIC_SOCIAL_INSTAGRAM=${NEXT_PUBLIC_SOCIAL_INSTAGRAM}
@@ -22,13 +21,17 @@ services:
       - ADMIN_USERNAME=${ADMIN_USERNAME}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - ADMIN_TOKEN=${ADMIN_TOKEN}
+      - DATABASE_PATH=/app/data/aicuf.db
     volumes:
       - uploads:/app/public/uploads
+      - database:/app/data
     restart: unless-stopped
 
 
 volumes:
   uploads:
+    driver: local
+  database:
     driver: local
 
 

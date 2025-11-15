@@ -5,8 +5,7 @@ import { existsSync } from "fs"
 import { checkRateLimit } from "@/lib/rate-limit"
 import { RATE_LIMIT } from "@/lib/constants"
 import { logger } from "@/lib/logger"
-import connectDB from "@/lib/db/connect"
-import Nomination from "@/lib/db/models/Nomination"
+import { db, schema } from "@/lib/db"
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024
 
@@ -75,9 +74,7 @@ export async function POST(request: NextRequest) {
       size: nocFile.size,
     })
 
-    await connectDB()
-
-    const nomination = await Nomination.create({
+    const nomination = db.insert(schema.nominations).values({
       name,
       unitName,
       contestingFor,
@@ -85,10 +82,10 @@ export async function POST(request: NextRequest) {
       nocFilePath: `/uploads/noc/${fileName}`,
       nocFileName: nocFile.name,
       status: "pending",
-    })
+    }).returning().get()
 
     logger.info("Nomination saved to database", {
-      id: nomination._id,
+      id: nomination.id,
       name,
       contestingFor,
     })
@@ -97,7 +94,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: "Nomination submitted successfully",
       data: {
-        nominationId: nomination._id,
+        nominationId: nomination.id,
         name,
         contestingFor,
       },

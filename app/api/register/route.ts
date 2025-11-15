@@ -4,8 +4,7 @@ import { validateAndSanitizeRegistrationData } from "@/lib/sanitize"
 import { RATE_LIMIT } from "@/lib/constants"
 import { logger } from "@/lib/logger"
 import { sendEmail, getRegistrationConfirmationEmail } from "@/lib/email"
-import connectDB from "@/lib/db/connect"
-import Registration from "@/lib/db/models/Registration"
+import { db, schema } from "@/lib/db"
 
 export async function POST(request: NextRequest) {
   try {
@@ -43,16 +42,14 @@ export async function POST(request: NextRequest) {
 
     const registrationId = `REG-${Date.now()}`
 
-    await connectDB()
-
-    const registration = await Registration.create({
+    const registration = db.insert(schema.registrations).values({
       ...data,
+      skills: JSON.stringify(data.skills || []),
       registrationId,
-      status: "pending",
-    })
+    }).returning().get()
 
     logger.info("Registration saved to database", {
-      id: registration._id,
+      id: registration.id,
       registrationId,
     })
 

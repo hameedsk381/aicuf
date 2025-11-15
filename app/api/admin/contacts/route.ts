@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { headers } from "next/headers"
-import connectDB from "@/lib/db/connect"
-import Contact from "@/lib/db/models/Contact"
+import { db, schema } from "@/lib/db"
+import { desc } from "drizzle-orm"
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,11 +15,9 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    await connectDB()
-
-    const contacts = await Contact.find()
-      .sort({ createdAt: -1 })
-      .lean()
+    const contacts = db.select().from(schema.contacts)
+      .orderBy(desc(schema.contacts.createdAt))
+      .all()
 
     return NextResponse.json({
       success: true,

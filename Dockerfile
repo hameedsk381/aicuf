@@ -16,10 +16,6 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build arguments for environment variables needed during build
-ARG MONGODB_URI
-ENV MONGODB_URI=${MONGODB_URI}
-
 # Disable telemetry during build
 ENV NEXT_TELEMETRY_DISABLED=1
 
@@ -46,9 +42,9 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Create uploads directory
-RUN mkdir -p /app/public/uploads/noc && \
-    chown -R nextjs:nodejs /app/public/uploads
+# Create uploads and data directories
+RUN mkdir -p /app/public/uploads/noc /app/data && \
+    chown -R nextjs:nodejs /app/public/uploads /app/data
 
 USER nextjs
 
