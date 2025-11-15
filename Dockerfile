@@ -1,58 +1,56 @@
-# Multi-stage build for Next.js application with Bun
+# Use Node.js instead of Bun for better compatibility
+FROM node:18-alpine AS base
 
-# Stage 1: Dependencies
-FROM oven/bun:1 AS deps
+# Install dependencies only when needed
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Copy package files
-COPY package.json bun.lockb ./
+COPY package.json package-lock.json* ./
+RUN npm ci
 
-# Install dependencies with Bun (no frozen lockfile to allow updates)
-RUN bun install
-
-# Stage 2: Builder
-FROM oven/bun:1 AS builder
+# Rebuild the source code only when needed
+FROM base AS builder
 WORKDIR /app
-
-# Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Set environment variables for build
+# Disable telemetry during build
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_ENV=production
 
-# Build the application
-RUN bun run build
+RUN npm run build
 
-# Stage 3: Runner
-FROM oven/bun:1-alpine AS runner
+# Production image, copy all the files and run next
+FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Create a non-root user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy necessary files from builder
+# Copy public assets
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
 
-# Create uploads directory and set permissions
+# Set the correct permissions for prerender cache
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
+
+# Automatically leverage output traces to reduce image size
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Create uploads directory
 RUN mkdir -p /app/public/uploads/noc && \
     chown -R nextjs:nodejs /app/public/uploads
 
-# Switch to non-root user
 USER nextjs
 
-# Expose port
 EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Start the application with Bun
-CMD ["bun", "server.js"]
+CMD ["node", "server.js"]

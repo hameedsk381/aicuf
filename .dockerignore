@@ -1,5 +1,4 @@
 node_modules
-npm-debug.log
 .next
 .DS_Store
 *.pem
@@ -12,5 +11,5 @@ docker-compose.yml
 README.md
 .vscode
 .idea
-package-lock.json
+bun.lockb
 pnpm-lock.yaml
