@@ -1,57 +1,39 @@
 # AICUF Website - Docker Guide
 
-## Build and Run with Docker (Using Bun)
+## Build and Run with Docker
 
-This project uses **Bun** runtime for faster builds and runtime performance.
+### Quick Start (Docker only)
 
-### Using Docker Compose (Recommended)
-
-1. **Build and start:**
-```bash
-docker-compose up -d --build
-```
-
-2. **View logs:**
-```bash
-docker-compose logs -f web
-```
-
-3. **Stop:**
-```bash
-docker-compose down
-```
-
-4. **Stop and remove volumes:**
-```bash
-docker-compose down -v
-```
-
-### Using Docker directly
-
-1. **Build image:**
+1. **Build the image:**
 ```bash
 docker build -t aicuf-website .
 ```
 
-2. **Run container:**
+2. **Run the container:**
 ```bash
-docker run -p 3000:3000 \
+docker run -d \
+  --name aicuf-web \
+  -p 3000:3000 \
   --env-file .env \
-  -v uploads:/app/public/uploads \
+  -v aicuf-uploads:/app/public/uploads \
+  --restart unless-stopped \
   aicuf-website
 ```
 
-3. **Stop container:**
+3. **View logs:**
 ```bash
-docker stop <container-id>
+docker logs -f aicuf-web
 ```
 
-## Why Bun?
+4. **Stop container:**
+```bash
+docker stop aicuf-web
+```
 
-- ⚡ **3x faster** dependency installation
-- 🚀 **Faster startup** time
-- 📦 **Smaller image** size (~120MB vs ~150MB)
-- 🔧 Drop-in replacement for Node.js
+5. **Remove container:**
+```bash
+docker rm aicuf-web
+```
 
 ## Environment Variables
 
@@ -60,6 +42,20 @@ Make sure your `.env` file is configured before running:
 ```bash
 cp .env.example .env
 # Edit .env with your actual values
+```
+
+Or pass environment variables directly:
+
+```bash
+docker run -d \
+  --name aicuf-web \
+  -p 3000:3000 \
+  -e MONGODB_URI="your-mongodb-uri" \
+  -e ADMIN_TOKEN="your-token" \
+  -e ADMIN_USERNAME="admin" \
+  -e ADMIN_PASSWORD="password" \
+  -v aicuf-uploads:/app/public/uploads \
+  aicuf-website
 ```
 
 ## Access
@@ -79,32 +75,68 @@ docker tag aicuf-website:latest your-registry/aicuf-website:latest
 docker push your-registry/aicuf-website:latest
 ```
 
-### Deploy on Server
+### Deploy on Production Server
 
 ```bash
-# Pull and run on production server
+# Pull image
 docker pull your-registry/aicuf-website:latest
-docker run -d -p 3000:3000 --env-file .env.production your-registry/aicuf-website:latest
+
+# Run container
+docker run -d \
+  --name aicuf-web \
+  -p 80:3000 \
+  --env-file .env.production \
+  -v /var/aicuf/uploads:/app/public/uploads \
+  --restart unless-stopped \
+  your-registry/aicuf-website:latest
+```
+
+## Common Commands
+
+**Rebuild image:**
+```bash
+docker build --no-cache -t aicuf-website .
+```
+
+**Restart container:**
+```bash
+docker restart aicuf-web
+```
+
+**View container stats:**
+```bash
+docker stats aicuf-web
+```
+
+**Execute commands inside container:**
+```bash
+docker exec -it aicuf-web sh
+```
+
+**Check uploaded files:**
+```bash
+docker exec -it aicuf-web ls -la /app/public/uploads/noc
 ```
 
 ## Troubleshooting
 
 **Container fails to start:**
 ```bash
-docker logs <container-id>
+docker logs aicuf-web
+```
+
+**Check if container is running:**
+```bash
+docker ps -a
+```
+
+**Remove old containers and images:**
+```bash
+docker rm aicuf-web
+docker rmi aicuf-website
 ```
 
 **Permission issues with uploads:**
 ```bash
-docker exec -it <container-id> ls -la /app/public/uploads
-```
-
-**Rebuild without cache:**
-```bash
-docker-compose build --no-cache
-```
-
-**Check Bun version:**
-```bash
-docker run aicuf-website bun --version
+docker exec -it aicuf-web ls -la /app/public/uploads
 ```

@@ -8,12 +8,6 @@ import { logger } from "@/lib/logger"
 import connectDB from "@/lib/db/connect"
 import Nomination from "@/lib/db/models/Nomination"
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-}
-
 const MAX_FILE_SIZE = 10 * 1024 * 1024
 
 export async function POST(request: NextRequest) {
