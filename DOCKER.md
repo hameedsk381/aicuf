@@ -1,6 +1,8 @@
 # AICUF Website - Docker Guide
 
-## Build and Run with Docker
+## Build and Run with Docker (Using Bun)
+
+This project uses **Bun** runtime for faster builds and runtime performance.
 
 ### Using Docker Compose (Recommended)
 
@@ -43,6 +45,13 @@ docker run -p 3000:3000 \
 ```bash
 docker stop <container-id>
 ```
+
+## Why Bun?
+
+- ⚡ **3x faster** dependency installation
+- 🚀 **Faster startup** time
+- 📦 **Smaller image** size (~120MB vs ~150MB)
+- 🔧 Drop-in replacement for Node.js
 
 ## Environment Variables
 
@@ -93,4 +102,9 @@ docker exec -it <container-id> ls -la /app/public/uploads
 **Rebuild without cache:**
 ```bash
 docker-compose build --no-cache
+```
+
+**Check Bun version:**
+```bash
+docker run aicuf-website bun --version
 ```

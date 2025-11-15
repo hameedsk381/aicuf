@@ -1,18 +1,17 @@
-# Multi-stage build for Next.js application
+# Multi-stage build for Next.js application with Bun
 
 # Stage 1: Dependencies
-FROM node:18-alpine AS deps
-RUN apk add --no-cache libc6-compat
+FROM oven/bun:1 AS deps
 WORKDIR /app
 
 # Copy package files
-COPY package.json package-lock.json* ./
+COPY package.json bun.lockb* ./
 
 # Install dependencies
-RUN npm ci
+RUN bun install --frozen-lockfile
 
 # Stage 2: Builder
-FROM node:18-alpine AS builder
+FROM oven/bun:1 AS builder
 WORKDIR /app
 
 # Copy dependencies from deps stage
@@ -24,10 +23,10 @@ ENV NEXT_TELEMETRY_DISABLED 1
 ENV NODE_ENV production
 
 # Build the application
-RUN npm run build
+RUN bun run build
 
 # Stage 3: Runner
-FROM node:18-alpine AS runner
+FROM oven/bun:1-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
@@ -55,5 +54,5 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-# Start the application
-CMD ["node", "server.js"]
+# Start the application with Bun
+CMD ["bun", "server.js"]

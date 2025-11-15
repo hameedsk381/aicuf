@@ -12,3 +12,5 @@ docker-compose.yml
 README.md
 .vscode
 .idea
+package-lock.json
+pnpm-lock.yaml
