@@ -7,22 +7,21 @@ import { ArrowLeft, Download } from "lucide-react"
 import Link from "next/link"
 
 interface Registration {
-  _id: string
+  id: number
   name: string
   emailId: string
   mobileNo: string
   whatsappNo: string
   applicationType: string
   gender: string
-  age: number
+  age: string
   course: string
   registrationNo: string
   religion: string
   address: string
   unitName?: string
   registrationId: string
-  status: string
-  createdAt: string
+  createdAt: Date
 }
 
 export default function RegistrationsPage() {
@@ -183,7 +182,7 @@ export default function RegistrationsPage() {
                   </tr>
                 ) : (
                   registrations.map((reg) => (
-                    <tr key={reg._id} className="hover:bg-gray-50">
+                    <tr key={reg.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 text-sm">{reg.registrationId}</td>
                       <td className="px-4 py-3 text-sm font-medium">{reg.name}</td>
                       <td className="px-4 py-3 text-sm">{reg.emailId}</td>

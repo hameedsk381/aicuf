@@ -7,13 +7,13 @@ import { ArrowLeft, Download } from "lucide-react"
 import Link from "next/link"
 
 interface Contact {
-  _id: string
+  id: number
   name: string
   email: string
   subject: string
   message: string
   status: string
-  createdAt: string
+  createdAt: Date
 }
 
 export default function ContactsPage() {
@@ -128,9 +128,9 @@ export default function ContactsPage() {
               ) : (
                 contacts.map((contact) => (
                   <div
-                    key={contact._id}
+                    key={contact.id}
                     className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
-                      selectedContact?._id === contact._id ? "bg-blue-50" : ""
+                      selectedContact?.id === contact.id ? "bg-blue-50" : ""
                     }`}
                     onClick={() => setSelectedContact(contact)}
                   >

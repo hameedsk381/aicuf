@@ -7,7 +7,7 @@ import { ArrowLeft, Download, ExternalLink } from "lucide-react"
 import Link from "next/link"
 
 interface Nomination {
-  _id: string
+  id: number
   name: string
   unitName: string
   contestingFor: string
@@ -15,7 +15,7 @@ interface Nomination {
   nocFilePath: string
   nocFileName: string
   status: string
-  createdAt: string
+  createdAt: Date
 }
 
 export default function NominationsPage() {
@@ -162,7 +162,7 @@ export default function NominationsPage() {
                   </tr>
                 ) : (
                   nominations.map((nom) => (
-                    <tr key={nom._id} className="hover:bg-gray-50">
+                    <tr key={nom.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 text-sm font-medium">{nom.name}</td>
                       <td className="px-4 py-3 text-sm">{nom.unitName}</td>
                       <td className="px-4 py-3 text-sm">{nom.contestingFor}</td>
