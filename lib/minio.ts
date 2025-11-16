@@ -27,10 +27,12 @@ function getMinioClient() {
       secretKey: process.env.MINIO_SECRET_KEY!,
     })
 
-    // Initialize bucket if it doesn't exist
-    ensureBucket().catch((error) => {
-      console.error("Error ensuring bucket exists:", error)
-    })
+    // Try to initialize bucket in background (non-blocking)
+    if (typeof window === "undefined") {
+      ensureBucket().catch((error) => {
+        console.warn("MinIO bucket initialization skipped:", error.message)
+      })
+    }
   }
 
   return minioInstance

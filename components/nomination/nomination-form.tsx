@@ -25,7 +25,7 @@ const nominationSchema = z.object({
     "National Council Member",
   ] as const),
   nocFile: z
-    .instanceof(FileList)
+    .any()
     .refine((files) => files?.length === 1, "NOC from Animator is required")
     .refine(
       (files) => files?.[0]?.size <= MAX_FILE_SIZE,
@@ -258,7 +258,9 @@ export default function NominationForm() {
             Supported formats: PDF, DOC, DOCX, JPG, PNG
           </p>
           {errors.nocFile && (
-            <p className="text-xs text-red-600">{errors.nocFile.message}</p>
+            <p className="text-xs text-red-600">
+              {typeof errors.nocFile.message === 'string' ? errors.nocFile.message : 'Invalid file'}
+            </p>
           )}
         </div>
 
