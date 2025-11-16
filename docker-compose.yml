@@ -51,8 +51,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
+ 
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://aicuf:aicuf_password@postgres:5432/aicuf
