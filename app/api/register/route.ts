@@ -42,11 +42,11 @@ export async function POST(request: NextRequest) {
 
     const registrationId = `REG-${Date.now()}`
 
-    const registration = db.insert(schema.registrations).values({
+    const [registration] = await db.insert(schema.registrations).values({
       ...data,
       skills: JSON.stringify(data.skills || []),
       registrationId,
-    }).returning().get()
+    }).returning()
 
     logger.info("Registration saved to database", {
       id: registration.id,

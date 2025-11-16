@@ -42,9 +42,9 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Create uploads and data directories with proper permissions
-RUN mkdir -p /app/public/uploads/noc /app/data && \
-    chown -R nextjs:nodejs /app/public/uploads /app/data && \
+# Create uploads directory with proper permissions
+RUN mkdir -p /app/public/uploads/noc && \
+    chown -R nextjs:nodejs /app/public/uploads && \
     chmod -R 755 /app/public/uploads
 
 USER nextjs

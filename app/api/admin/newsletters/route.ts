@@ -15,9 +15,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const newsletters = db.select().from(schema.newsletters)
+    const newsletters = await db.select().from(schema.newsletters)
       .orderBy(desc(schema.newsletters.subscribedAt))
-      .all()
 
     return NextResponse.json({
       success: true,
@@ -58,9 +57,8 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    db.delete(schema.newsletters)
+    await db.delete(schema.newsletters)
       .where(eq(schema.newsletters.id, parseInt(id)))
-      .run()
 
     return NextResponse.json({
       success: true,

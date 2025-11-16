@@ -15,9 +15,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const nominations = db.select().from(schema.nominations)
+    const nominations = await db.select().from(schema.nominations)
       .orderBy(desc(schema.nominations.createdAt))
-      .all()
 
     return NextResponse.json({
       success: true,
@@ -64,10 +63,9 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    db.update(schema.nominations)
+    await db.update(schema.nominations)
       .set({ status })
       .where(eq(schema.nominations.id, id))
-      .run()
 
     return NextResponse.json({
       success: true,
@@ -107,9 +105,8 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    db.delete(schema.nominations)
+    await db.delete(schema.nominations)
       .where(eq(schema.nominations.id, parseInt(id)))
-      .run()
 
     return NextResponse.json({
       success: true,

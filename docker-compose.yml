@@ -1,5 +1,23 @@
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: aicuf-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-aicuf}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-aicuf_password}
+      POSTGRES_DB: ${POSTGRES_DB:-aicuf}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-aicuf}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   web:
     build:
       context: .
@@ -8,6 +26,7 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
       - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
       - NEXT_PUBLIC_SITE_NAME=${NEXT_PUBLIC_SITE_NAME}
       - NEXT_PUBLIC_SOCIAL_INSTAGRAM=${NEXT_PUBLIC_SOCIAL_INSTAGRAM}
@@ -21,17 +40,18 @@ services:
       - ADMIN_USERNAME=${ADMIN_USERNAME}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - ADMIN_TOKEN=${ADMIN_TOKEN}
-      - DATABASE_PATH=/app/data/aicuf.db
     volumes:
       - uploads:/app/public/uploads
-      - database:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
 
 volumes:
   uploads:
     driver: local
-  database:
+  postgres_data:
     driver: local
 
 

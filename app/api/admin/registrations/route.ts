@@ -15,9 +15,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const registrations = db.select().from(schema.registrations)
+    const registrations = await db.select().from(schema.registrations)
       .orderBy(desc(schema.registrations.createdAt))
-      .all()
 
     return NextResponse.json({
       success: true,
@@ -58,9 +57,8 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    db.delete(schema.registrations)
+    await db.delete(schema.registrations)
       .where(eq(schema.registrations.id, parseInt(id)))
-      .run()
 
     return NextResponse.json({
       success: true,

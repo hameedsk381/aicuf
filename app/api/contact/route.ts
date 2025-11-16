@@ -46,10 +46,10 @@ export async function POST(request: NextRequest) {
       subject: data.subject,
     })
 
-    const contact = db.insert(schema.contacts).values({
+    const [contact] = await db.insert(schema.contacts).values({
       ...data,
       status: "new",
-    }).returning().get()
+    }).returning()
 
     logger.info("Contact saved to database", {
       id: contact.id,

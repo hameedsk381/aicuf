@@ -15,9 +15,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const contacts = db.select().from(schema.contacts)
+    const contacts = await db.select().from(schema.contacts)
       .orderBy(desc(schema.contacts.createdAt))
-      .all()
 
     return NextResponse.json({
       success: true,
@@ -64,10 +63,9 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    db.update(schema.contacts)
+    await db.update(schema.contacts)
       .set({ status })
       .where(eq(schema.contacts.id, id))
-      .run()
 
     return NextResponse.json({
       success: true,
@@ -107,9 +105,8 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    db.delete(schema.contacts)
+    await db.delete(schema.contacts)
       .where(eq(schema.contacts.id, parseInt(id)))
-      .run()
 
     return NextResponse.json({
       success: true,

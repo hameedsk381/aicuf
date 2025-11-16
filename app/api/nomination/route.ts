@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       size: nocFile.size,
     })
 
-    const nomination = db.insert(schema.nominations).values({
+    const [nomination] = await db.insert(schema.nominations).values({
       name,
       unitName,
       contestingFor,
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
       nocFilePath: `/api/files/noc/${fileName}`,
       nocFileName: nocFile.name,
       status: "pending",
-    }).returning().get()
+    }).returning()
 
     logger.info("Nomination saved to database", {
       id: nomination.id,
