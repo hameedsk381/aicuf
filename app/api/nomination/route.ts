@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       unitName,
       contestingFor,
       educationQualification,
-      nocFilePath: `/uploads/noc/${fileName}`,
+      nocFilePath: `/api/files/noc/${fileName}`,
       nocFileName: nocFile.name,
       status: "pending",
     }).returning().get()

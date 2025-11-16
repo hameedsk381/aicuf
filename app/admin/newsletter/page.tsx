@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Download } from "lucide-react"
+import { ArrowLeft, Download, Trash2 } from "lucide-react"
 import Link from "next/link"
 
 interface Newsletter {
@@ -47,6 +47,31 @@ export default function NewsletterPage() {
       setError(error instanceof Error ? error.message : "Failed to load data")
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this subscriber?")) return
+
+    const token = localStorage.getItem("admin-token")
+    if (!token) return
+
+    try {
+      const response = await fetch(`/api/admin/newsletters?id=${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to delete subscriber")
+      }
+
+      // Refresh the list
+      fetchNewsletters(token)
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to delete subscriber")
     }
   }
 
@@ -117,12 +142,15 @@ export default function NewsletterPage() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     Subscribed Date
                   </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {newsletters.length === 0 ? (
                   <tr>
-                    <td colSpan={2} className="px-4 py-8 text-center text-muted-foreground">
+                    <td colSpan={3} className="px-4 py-8 text-center text-muted-foreground">
                       No subscribers yet
                     </td>
                   </tr>
@@ -132,6 +160,17 @@ export default function NewsletterPage() {
                       <td className="px-4 py-3 text-sm">{newsletter.email}</td>
                       <td className="px-4 py-3 text-sm">
                         {new Date(newsletter.subscribedAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDelete(newsletter.id)}
+                          className="h-7 px-2 rounded-none"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
                       </td>
                     </tr>
                   ))

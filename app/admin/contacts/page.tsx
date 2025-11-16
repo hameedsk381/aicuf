@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Download } from "lucide-react"
+import { ArrowLeft, Download, Check, Trash2 } from "lucide-react"
 import Link from "next/link"
 
 interface Contact {
@@ -52,6 +52,57 @@ export default function ContactsPage() {
       setError(error instanceof Error ? error.message : "Failed to load data")
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleStatusChange = async (id: number, status: string) => {
+    const token = localStorage.getItem("admin-token")
+    if (!token) return
+
+    try {
+      const response = await fetch("/api/admin/contacts", {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id, status }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update status")
+      }
+
+      // Refresh the list
+      fetchContacts(token)
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to update status")
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this contact?")) return
+
+    const token = localStorage.getItem("admin-token")
+    if (!token) return
+
+    try {
+      const response = await fetch(`/api/admin/contacts?id=${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to delete contact")
+      }
+
+      setSelectedContact(null)
+      // Refresh the list
+      fetchContacts(token)
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to delete contact")
     }
   }
 
@@ -195,6 +246,33 @@ export default function ContactsPage() {
                     <p className="text-sm mt-1">
                       {new Date(selectedContact.createdAt).toLocaleString()}
                     </p>
+                  </div>
+                  <div className="flex gap-2 pt-4 border-t">
+                    {selectedContact.status === "unread" && (
+                      <Button
+                        onClick={() => handleStatusChange(selectedContact.id, "read")}
+                        className="flex-1 rounded-none bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        <Check className="h-4 w-4 mr-2" />
+                        Mark as Read
+                      </Button>
+                    )}
+                    {selectedContact.status === "read" && (
+                      <Button
+                        onClick={() => handleStatusChange(selectedContact.id, "unread")}
+                        className="flex-1 rounded-none bg-gray-600 hover:bg-gray-700 text-white"
+                      >
+                        Mark as Unread
+                      </Button>
+                    )}
+                    <Button
+                      onClick={() => handleDelete(selectedContact.id)}
+                      variant="destructive"
+                      className="flex-1 rounded-none"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
                   </div>
                 </div>
               ) : (

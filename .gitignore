@@ -177,12 +177,14 @@ storybook-static
 # Uploaded files
 /public/uploads/*
 !/public/uploads/.gitkeep
+!/public/uploads/noc/.gitkeep
 
 # Database
 *.sqlite
 *.sqlite3
 *.db
-/data/
+/data/*
+!data/.gitkeep
 *.db-shm
 *.db-wal
 

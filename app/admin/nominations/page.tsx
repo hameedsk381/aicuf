@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Download, ExternalLink } from "lucide-react"
+import { ArrowLeft, Download, ExternalLink, Trash2, Check, X, FileDown } from "lucide-react"
 import Link from "next/link"
 
 interface Nomination {
@@ -53,6 +53,56 @@ export default function NominationsPage() {
       setError(error instanceof Error ? error.message : "Failed to load data")
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleStatusChange = async (id: number, status: string) => {
+    const token = localStorage.getItem("admin-token")
+    if (!token) return
+
+    try {
+      const response = await fetch("/api/admin/nominations", {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id, status }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update status")
+      }
+
+      // Refresh the list
+      fetchNominations(token)
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to update status")
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this nomination?")) return
+
+    const token = localStorage.getItem("admin-token")
+    if (!token) return
+
+    try {
+      const response = await fetch(`/api/admin/nominations?id=${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to delete nomination")
+      }
+
+      // Refresh the list
+      fetchNominations(token)
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to delete nomination")
     }
   }
 
@@ -151,12 +201,15 @@ export default function NominationsPage() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     Date
                   </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {nominations.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                    <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
                       No nominations found
                     </td>
                   </tr>
@@ -170,15 +223,28 @@ export default function NominationsPage() {
                         {nom.educationQualification}
                       </td>
                       <td className="px-4 py-3 text-sm">
-                        <a
-                          href={nom.nocFilePath}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline flex items-center gap-1"
-                        >
-                          View File
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
+                        <div className="flex flex-col gap-1">
+                          <a
+                            href={nom.nocFilePath}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline flex items-center gap-1 text-xs"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            View
+                          </a>
+                          <a
+                            href={nom.nocFilePath}
+                            download={nom.nocFileName}
+                            className="text-blue-600 hover:underline flex items-center gap-1 text-xs"
+                          >
+                            <FileDown className="h-3 w-3" />
+                            Download
+                          </a>
+                          <span className="text-xs text-gray-500 truncate max-w-[120px]" title={nom.nocFileName}>
+                            {nom.nocFileName}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-sm">
                         <span
@@ -195,6 +261,39 @@ export default function NominationsPage() {
                       </td>
                       <td className="px-4 py-3 text-sm">
                         {new Date(nom.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <div className="flex items-center gap-2">
+                          {nom.status === "pending" && (
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={() => handleStatusChange(nom.id, "approved")}
+                                className="h-7 px-2 bg-green-600 hover:bg-green-700 text-white rounded-none"
+                                title="Approve"
+                              >
+                                <Check className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleStatusChange(nom.id, "rejected")}
+                                className="h-7 px-2 bg-red-600 hover:bg-red-700 text-white rounded-none"
+                                title="Reject"
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDelete(nom.id)}
+                            className="h-7 px-2 rounded-none"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))

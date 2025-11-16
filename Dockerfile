@@ -31,7 +31,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy public assets
+# Copy public assets (excluding uploads which will be volume mounted)
 COPY --from=builder /app/public ./public
 
 # Set the correct permissions for prerender cache
@@ -42,9 +42,10 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Create uploads and data directories
+# Create uploads and data directories with proper permissions
 RUN mkdir -p /app/public/uploads/noc /app/data && \
-    chown -R nextjs:nodejs /app/public/uploads /app/data
+    chown -R nextjs:nodejs /app/public/uploads /app/data && \
+    chmod -R 755 /app/public/uploads
 
 USER nextjs
 

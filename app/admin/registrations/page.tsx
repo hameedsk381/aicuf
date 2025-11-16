@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Download } from "lucide-react"
+import { ArrowLeft, Download, Trash2 } from "lucide-react"
 import Link from "next/link"
 
 interface Registration {
@@ -59,6 +59,31 @@ export default function RegistrationsPage() {
       setError(error instanceof Error ? error.message : "Failed to load data")
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this registration?")) return
+
+    const token = localStorage.getItem("admin-token")
+    if (!token) return
+
+    try {
+      const response = await fetch(`/api/admin/registrations?id=${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to delete registration")
+      }
+
+      // Refresh the list
+      fetchRegistrations(token)
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to delete registration")
     }
   }
 
@@ -166,12 +191,15 @@ export default function RegistrationsPage() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     Date
                   </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {registrations.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                    <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
                       No registrations found
                     </td>
                   </tr>
@@ -185,6 +213,17 @@ export default function RegistrationsPage() {
                       <td className="px-4 py-3 text-sm capitalize">{reg.applicationType}</td>
                       <td className="px-4 py-3 text-sm">
                         {new Date(reg.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDelete(reg.id)}
+                          className="h-7 px-2 rounded-none"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
                       </td>
                     </tr>
                   ))
