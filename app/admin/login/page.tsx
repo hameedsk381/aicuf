@@ -37,8 +37,8 @@ export default function AdminLoginPage() {
       }
 
       // Token is set in httpOnly cookie by the API
-      router.push("/admin/dashboard")
-      router.refresh()
+      // Use window.location to ensure cookie is sent with next request
+      window.location.href = "/admin/dashboard"
     } catch (error) {
       setError(error instanceof Error ? error.message : "Login failed")
     } finally {
