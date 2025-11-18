@@ -21,6 +21,7 @@ docker run -d `
   -e POSTGRES_USER=aicuf `
   -e POSTGRES_PASSWORD=aicuf_password `
   -e POSTGRES_DB=aicuf `
+  -p 5433:5432 `
   --restart unless-stopped `
   postgres:16-alpine
 

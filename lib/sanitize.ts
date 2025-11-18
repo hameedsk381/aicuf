@@ -25,7 +25,7 @@ export function sanitizeHtml(html: string): string {
   sanitized = sanitized.replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
   sanitized = sanitized.replace(/javascript:/gi, '')
   sanitized = sanitized.replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
-  
+
   return sanitized
 }
 
@@ -41,6 +41,8 @@ export function validateAndSanitizeRegistrationData(data: any) {
     mobileNo: sanitizePhoneNumber(data.mobileNo),
     whatsappNo: sanitizePhoneNumber(data.whatsappNo),
     emailId: sanitizeEmail(data.emailId),
+    password: data.password, // Pass through without sanitization (will be hashed)
+    confirmPassword: data.confirmPassword, // Only for validation, not stored
     religion: data.religion,
     address: sanitizeInput(data.address),
     skills: data.skills ? data.skills.map((s: string) => sanitizeInput(s)) : [],

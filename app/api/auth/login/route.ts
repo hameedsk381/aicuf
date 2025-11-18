@@ -1,58 +1,69 @@
-import { NextRequest, NextResponse } from "next/server"
-import { logger } from "@/lib/logger"
+import { NextResponse } from "next/server"
+import { db } from "@/lib/db"
+import { registrations } from "@/lib/db/schema"
+import { eq } from "drizzle-orm"
+import bcrypt from "bcryptjs"
+import { SignJWT } from "jose"
 
-const ADMIN_CREDENTIALS = {
-  username: process.env.ADMIN_USERNAME || "admin",
-  password: process.env.ADMIN_PASSWORD || "admin123",
-}
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "default-secret-key")
 
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "default-token-change-this"
-
-export async function POST(request: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const { username, password } = await request.json()
+    const { email, password } = await req.json()
 
-    if (!username || !password) {
+    if (!email || !password) {
+      return NextResponse.json({ error: "Email and password are required" }, { status: 400 })
+    }
+
+    // Find user by email
+    const user = await db.query.registrations.findFirst({
+      where: eq(registrations.emailId, email),
+    })
+
+    if (!user) {
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
+    }
+
+    // Check if user has a password set
+    if (!user.password) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Username and password are required",
-        },
-        { status: 400 }
+        { error: "Account exists but no password set. Please contact admin." },
+        { status: 401 }
       )
     }
 
-    if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-      logger.info("Admin login successful", { username })
+    // Verify password
+    const isValid = await bcrypt.compare(password, user.password)
 
-      return NextResponse.json({
-        success: true,
-        token: ADMIN_TOKEN,
-        user: {
-          username,
-          role: "admin",
-        },
-      })
+    if (!isValid) {
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
     }
 
-    logger.warn("Admin login failed - invalid credentials", { username })
+    // Generate JWT
+    const token = await new SignJWT({
+      id: user.id,
+      email: user.emailId,
+      role: user.role
+    })
+      .setProtectedHeader({ alg: "HS256" })
+      .setExpirationTime("24h")
+      .sign(JWT_SECRET)
 
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Invalid credentials",
-      },
-      { status: 401 }
-    )
+    // Create response with cookie
+    const response = NextResponse.json({ success: true })
+
+    response.cookies.set("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24, // 24 hours
+      path: "/",
+    })
+
+    return response
+
   } catch (error) {
-    logger.error("Admin login error", {}, error as Error)
-
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Login failed",
-      },
-      { status: 500 }
-    )
+    console.error("Login error:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

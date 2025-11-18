@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core"
+import { pgTable, serial, text, timestamp, varchar, integer } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 
 export const registrations = pgTable("registrations", {
@@ -24,8 +24,20 @@ export const registrations = pgTable("registrations", {
   aicufVision: text("aicuf_vision"),
   leadershipPosition: text("leadership_position"),
   additionalMessage: text("additional_message"),
+  password: varchar("password", { length: 255 }),
+  role: varchar("role", { length: 20 }).notNull().default("member"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 })
+
+export const passkeyCredentials = pgTable('passkey_credentials', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => registrations.id),
+  credentialId: varchar('credential_id', { length: 255 }).notNull(),
+  publicKey: varchar('public_key', { length: 1024 }).notNull(),
+  counter: integer('counter').notNull().default(0),
+  transports: varchar('transports', { length: 255 }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
 
 export const nominations = pgTable("nominations", {
   id: serial("id").primaryKey(),

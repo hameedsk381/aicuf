@@ -11,6 +11,7 @@ import StepTwo from "./step-two"
 import StepThree from "./step-three"
 import StepFour from "./step-four"
 import SuccessMessage from "./success-message"
+import PasskeyPrompt from "./passkey-prompt"
 import { useFormPersistence, getSavedFormData } from "@/hooks/use-form-persistence"
 import { FORM_CONSTANTS } from "@/lib/constants"
 
@@ -20,8 +21,8 @@ const formSchema = z.object({
     message: "Please select an application type",
   }),
 
-  name: z.string().min(FORM_CONSTANTS.VALIDATION.MIN_NAME_LENGTH, { 
-    message: `Name must be at least ${FORM_CONSTANTS.VALIDATION.MIN_NAME_LENGTH} characters` 
+  name: z.string().min(FORM_CONSTANTS.VALIDATION.MIN_NAME_LENGTH, {
+    message: `Name must be at least ${FORM_CONSTANTS.VALIDATION.MIN_NAME_LENGTH} characters`
   }),
   gender: z.string().min(1, { message: "Please select your gender" }),
   registrationNo: z.string().min(1, { message: "Registration number is required" }),
@@ -32,21 +33,27 @@ const formSchema = z.object({
   }, { message: `Age must be between ${FORM_CONSTANTS.VALIDATION.MIN_AGE} and ${FORM_CONSTANTS.VALIDATION.MAX_AGE}` }),
   instagramId: z.string().optional(),
   mobileNo: z.string()
-    .min(FORM_CONSTANTS.VALIDATION.MIN_PHONE_LENGTH, { 
-      message: `Mobile number must be at least ${FORM_CONSTANTS.VALIDATION.MIN_PHONE_LENGTH} digits` 
+    .min(FORM_CONSTANTS.VALIDATION.MIN_PHONE_LENGTH, {
+      message: `Mobile number must be at least ${FORM_CONSTANTS.VALIDATION.MIN_PHONE_LENGTH} digits`
     })
     .regex(/^[0-9]{10,15}$/, { message: "Please enter a valid mobile number (digits only)" }),
   whatsappNo: z.string()
-    .min(FORM_CONSTANTS.VALIDATION.MIN_PHONE_LENGTH, { 
-      message: `WhatsApp number must be at least ${FORM_CONSTANTS.VALIDATION.MIN_PHONE_LENGTH} digits` 
+    .min(FORM_CONSTANTS.VALIDATION.MIN_PHONE_LENGTH, {
+      message: `WhatsApp number must be at least ${FORM_CONSTANTS.VALIDATION.MIN_PHONE_LENGTH} digits`
     })
     .regex(/^[0-9]{10,15}$/, { message: "Please enter a valid WhatsApp number (digits only)" }),
   emailId: z.string().email({ message: "Please enter a valid email address" }),
+  password: z.string().min(8, {
+    message: "Password must be at least 8 characters"
+  }),
+  confirmPassword: z.string().min(1, {
+    message: "Please confirm your password"
+  }),
   religion: z.enum(["catholic", "christian", "other"], {
     message: "Please select your religion",
   }),
-  address: z.string().min(FORM_CONSTANTS.VALIDATION.MIN_ADDRESS_LENGTH, { 
-    message: `Address must be at least ${FORM_CONSTANTS.VALIDATION.MIN_ADDRESS_LENGTH} characters` 
+  address: z.string().min(FORM_CONSTANTS.VALIDATION.MIN_ADDRESS_LENGTH, {
+    message: `Address must be at least ${FORM_CONSTANTS.VALIDATION.MIN_ADDRESS_LENGTH} characters`
   }),
 
   // Skills
@@ -70,7 +77,10 @@ const formSchema = z.object({
 
   // Additional message
   additionalMessage: z.string().optional(),
-})
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
 
 type FormValues = z.infer<typeof formSchema>
 
@@ -80,6 +90,9 @@ export default function RegistrationForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [showRestorePrompt, setShowRestorePrompt] = useState(false)
+  const [showPasskeyPrompt, setShowPasskeyPrompt] = useState(false)
+  const [registeredEmail, setRegisteredEmail] = useState<string>("")
+  const [passkeyRegistered, setPasskeyRegistered] = useState(false)
 
   const methods = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -105,8 +118,8 @@ export default function RegistrationForm() {
   }, [isSubmitted])
 
   const { clearSavedData } = useFormPersistence(
-    FORM_CONSTANTS.STORAGE_KEYS.REGISTRATION_DRAFT, 
-    formData, 
+    FORM_CONSTANTS.STORAGE_KEYS.REGISTRATION_DRAFT,
+    formData,
     !isSubmitted
   )
 
@@ -138,6 +151,8 @@ export default function RegistrationForm() {
           "mobileNo",
           "whatsappNo",
           "emailId",
+          "password",
+          "confirmPassword",
           "religion",
           "address",
         ]
@@ -193,7 +208,10 @@ export default function RegistrationForm() {
 
       console.log("Registration successful:", result)
       clearSavedData()
-      setIsSubmitted(true)
+
+      // Store email and show passkey prompt instead of success message
+      setRegisteredEmail(data.emailId)
+      setShowPasskeyPrompt(true)
     } catch (error) {
       console.error("Registration error:", error)
       setSubmitError(error instanceof Error ? error.message : "Failed to submit registration. Please try again.")
@@ -208,8 +226,26 @@ export default function RegistrationForm() {
     exit: { opacity: 0, x: -50 },
   }
 
+  // Show passkey prompt after successful registration
+  if (showPasskeyPrompt) {
+    return (
+      <PasskeyPrompt
+        email={registeredEmail}
+        onComplete={(success) => {
+          setPasskeyRegistered(success);
+          setIsSubmitted(true);
+        }}
+        onSkip={() => {
+          setPasskeyRegistered(false);
+          setIsSubmitted(true);
+        }}
+      />
+    );
+  }
+
+  // Show final success message
   if (isSubmitted) {
-    return <SuccessMessage />
+    return <SuccessMessage passkeyRegistered={passkeyRegistered} />
   }
 
   return (
@@ -298,8 +334,8 @@ export default function RegistrationForm() {
               Next
             </Button>
           ) : (
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={isSubmitting}
               className="ml-auto rounded-none bg-maroon hover:bg-maroon/90 text-white"
             >

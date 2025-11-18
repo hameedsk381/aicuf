@@ -20,11 +20,15 @@
     "@radix-ui/react-radio-group": "latest",
     "@radix-ui/react-select": "latest",
     "@radix-ui/react-slot": "latest",
+    "@simplewebauthn/browser": "^13.2.2",
+    "@simplewebauthn/server": "^13.2.2",
+    "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.44.7",
     "formidable": "^3.5.4",
     "framer-motion": "latest",
+    "jose": "^6.1.2",
     "lucide-react": "^0.454.0",
     "minio": "^8.0.6",
     "next": "^14.0.0",
@@ -38,6 +42,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/formidable": "^3.4.6",
     "@types/mongoose": "^5.11.96",
     "@types/node": "^22",

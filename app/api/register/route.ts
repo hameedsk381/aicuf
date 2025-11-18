@@ -5,11 +5,12 @@ import { RATE_LIMIT } from "@/lib/constants"
 import { logger } from "@/lib/logger"
 import { sendEmail, getRegistrationConfirmationEmail } from "@/lib/email"
 import { db, schema } from "@/lib/db"
+import bcrypt from "bcryptjs"
 
 export async function POST(request: NextRequest) {
   try {
     const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown"
-    
+
     const rateLimitResult = checkRateLimit(`register:${ip}`, RATE_LIMIT.REGISTRATION)
 
     if (!rateLimitResult.success) {
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
           message: "Too many registration attempts. Please try again later.",
           resetTime: rateLimitResult.resetTime,
         },
-        { 
+        {
           status: 429,
           headers: {
             'X-RateLimit-Limit': '3',
@@ -42,8 +43,16 @@ export async function POST(request: NextRequest) {
 
     const registrationId = `REG-${Date.now()}`
 
+    // Hash password before storing
+    const hashedPassword = await bcrypt.hash(data.password, 10)
+
+    // Set role based on application type
+    const role = data.applicationType === 'leadership' ? 'leader' : 'member'
+
     const [registration] = await db.insert(schema.registrations).values({
       ...data,
+      password: hashedPassword,
+      role,
       skills: JSON.stringify(data.skills || []),
       registrationId,
     }).returning()
