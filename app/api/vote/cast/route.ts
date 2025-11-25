@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db, schema } from "@/lib/db"
-import { votes } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
 import { sanitizeInput } from "@/lib/sanitize"
 
@@ -29,15 +28,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: 'Voter ID mismatch' }, { status: 403 })
     }
 
-    const existing = await db.select().from(votes).where(eq(votes.voterId, authId))
+    const existing = await db.select().from(votesTable).where(eq(votesTable.voterId, authId))
     if (existing.length > 0) {
       return NextResponse.json({ success: false, message: 'Vote already cast' }, { status: 409 })
     }
 
-    await db.insert(votes).values({ voterId: authId, choice, createdAt: new Date() })
+    await db.insert(votesTable).values({ voterId: authId, choice, createdAt: new Date() })
 
     return NextResponse.json({ success: true })
   } catch (error) {
     return NextResponse.json({ success: false, message: 'Failed to cast vote', error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
 }
+const votesTable: any = (schema as any).votes
