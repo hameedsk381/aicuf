@@ -49,6 +49,7 @@ export default function Header() {
     { href: "/gallery", label: "Gallery" },
     { href: "/contact", label: "Contact" },
     { href: "/voter/register", label: "Voter Registration" },
+    { href: "/vote", label: "Cast Vote" },
     { href: "/register", label: "Join APTSAICUF" },
   ]
 

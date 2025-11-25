@@ -92,6 +92,7 @@ export default function AdminDashboard() {
     { label: "View Nominations", href: "/admin/nominations", icon: FileText },
     { label: "View Contacts", href: "/admin/contacts", icon: Mail },
     { label: "Newsletter List", href: "/admin/newsletter", icon: Mail },
+    { label: "View Voters", href: "/admin/voters", icon: Users },
   ]
 
   return (
