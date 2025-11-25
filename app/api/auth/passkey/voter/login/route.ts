@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       const creds = await db.select().from(schema.voterPasskeyCredentials).where(eq(schema.voterPasskeyCredentials.voterId, voter.id))
       if (creds.length === 0) return NextResponse.json({ error: 'No passkeys registered for this voter' }, { status: 404 })
 
-      const allowCredentials = creds.map(c => ({ id: base64ToBase64url(c.credentialId), type: 'public-key' as const, transports: ['internal'] as const }))
+      const allowCredentials = creds.map(c => ({ id: base64ToBase64url(c.credentialId), type: 'public-key' as const, transports: ['internal'] as any }))
       const options = await generateAuthenticationOptions({ rpID: getRpID(), userVerification: 'required', timeout: 60000, allowCredentials })
       voterLoginChallenges[voterId] = options.challenge
       return NextResponse.json(options)
