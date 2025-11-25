@@ -139,17 +139,18 @@ export default function LoginPage() {
                                     </FormItem>
                                 )}
                             />
-                            <Button type="submit" className="w-full" disabled={isLoading}>
-                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Login
-                            </Button>
                             <Button
                                 type="button"
-                                className="w-full mt-2"
+                                className="w-full"
                                 disabled={isLoading}
                                 onClick={handlePasskeyLogin}
                             >
+                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Login with Passkey
+                            </Button>
+                            <Button type="submit" className="w-full mt-2" disabled={isLoading}>
+                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Login with Password
                             </Button>
                         </form>
                         <div className="mt-4 text-center text-sm text-muted-foreground">

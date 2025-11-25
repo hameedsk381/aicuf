@@ -209,7 +209,6 @@ export default function RegistrationForm() {
       console.log("Registration successful:", result)
       clearSavedData()
 
-      // Store email and show passkey prompt instead of success message
       setRegisteredEmail(data.emailId)
       setShowPasskeyPrompt(true)
     } catch (error) {
@@ -233,10 +232,6 @@ export default function RegistrationForm() {
         email={registeredEmail}
         onComplete={(success) => {
           setPasskeyRegistered(success);
-          setIsSubmitted(true);
-        }}
-        onSkip={() => {
-          setPasskeyRegistered(false);
           setIsSubmitted(true);
         }}
       />

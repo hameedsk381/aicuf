@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Fingerprint, Loader2, CheckCircle, AlertCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,10 +9,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 interface PasskeyPromptProps {
     email: string;
     onComplete: (success: boolean) => void;
-    onSkip: () => void;
 }
 
-export default function PasskeyPrompt({ email, onComplete, onSkip }: PasskeyPromptProps) {
+export default function PasskeyPrompt({ email, onComplete }: PasskeyPromptProps) {
     const [isRegistering, setIsRegistering] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
@@ -70,6 +69,12 @@ export default function PasskeyPrompt({ email, onComplete, onSkip }: PasskeyProm
         }
     }
 
+    useEffect(() => {
+        if (!success && !isRegistering) {
+            handleRegisterPasskey();
+        }
+    }, [success, isRegistering]);
+
     if (success) {
         return (
             <motion.div
@@ -108,7 +113,7 @@ export default function PasskeyPrompt({ email, onComplete, onSkip }: PasskeyProm
                     Set up biometric login for faster and more secure access. Use your fingerprint, face, or device PIN.
                 </p>
                 <p className="text-sm text-muted-foreground">
-                    You can skip this step and add it later from your dashboard.
+                    This step is required to complete your registration.
                 </p>
             </div>
 
@@ -128,14 +133,6 @@ export default function PasskeyPrompt({ email, onComplete, onSkip }: PasskeyProm
                 >
                     {isRegistering && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     {isRegistering ? "Setting up..." : "Set up Biometric Login"}
-                </Button>
-                <Button
-                    variant="outline"
-                    onClick={onSkip}
-                    disabled={isRegistering}
-                    className="rounded-none border-primary hover:bg-blue-50 text-primary"
-                >
-                    Skip for Now
                 </Button>
             </div>
 
