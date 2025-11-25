@@ -48,7 +48,7 @@ export default function Header() {
     { href: "/news", label: "News" },
     { href: "/gallery", label: "Gallery" },
     { href: "/contact", label: "Contact" },
-    { href: "/nomination", label: "Nomination" },
+    { href: "/voter/register", label: "Voter Registration" },
     { href: "/register", label: "Join APTSAICUF" },
   ]
 

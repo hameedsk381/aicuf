@@ -66,3 +66,24 @@ export const newsletters = pgTable("newsletters", {
   email: varchar("email", { length: 255 }).notNull().unique(),
   subscribedAt: timestamp("subscribed_at").notNull().defaultNow(),
 })
+
+export const voters = pgTable("voters", {
+  id: serial("id").primaryKey(),
+  voterId: varchar("voter_id", { length: 255 }).notNull().unique(),
+  name: varchar("name", { length: 255 }).notNull(),
+  designation: varchar("designation", { length: 255 }).notNull(),
+  unitName: varchar("unit_name", { length: 255 }).notNull(),
+  mobileNo: varchar("mobile_no", { length: 20 }).notNull(),
+  passkey: varchar("passkey", { length: 255 }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+})
+
+export const voterPasskeyCredentials = pgTable('voter_passkey_credentials', {
+  id: serial('id').primaryKey(),
+  voterId: integer('voter_id').references(() => voters.id),
+  credentialId: varchar('credential_id', { length: 255 }).notNull(),
+  publicKey: varchar('public_key', { length: 1024 }).notNull(),
+  counter: integer('counter').notNull().default(0),
+  transports: varchar('transports', { length: 255 }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})

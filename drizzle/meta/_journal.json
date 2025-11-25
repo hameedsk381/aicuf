@@ -22,6 +22,13 @@
       "when": 1763491579848,
       "tag": "0002_good_thundra",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1764095044906,
+      "tag": "0003_hard_snowbird",
+      "breakpoints": true
     }
   ]
 }
