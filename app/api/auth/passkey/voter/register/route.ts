@@ -31,8 +31,9 @@ export async function POST(req: Request) {
         timeout: 60000,
         attestationType: 'none',
         authenticatorSelection: {
-          residentKey: 'discouraged',
-          userVerification: 'preferred',
+          residentKey: 'preferred',
+          userVerification: 'required',
+          authenticatorAttachment: 'platform',
         },
       })
       voterChallengeStore[voterId] = options.challenge
@@ -79,4 +80,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Registration failed' }, { status: 500 })
   }
 }
-

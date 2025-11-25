@@ -36,8 +36,9 @@ export async function POST(req: Request) {
                 timeout: 60000,
                 attestationType: 'none',
                 authenticatorSelection: {
-                    residentKey: 'discouraged',
-                    userVerification: 'preferred',
+                    residentKey: 'preferred',
+                    userVerification: 'required',
+                    authenticatorAttachment: 'platform',
                 },
             });
             challengeStore[email] = options.challenge;
