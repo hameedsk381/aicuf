@@ -68,12 +68,23 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Voter not found' }, { status: 404 })
       }
 
-      await db.insert(schema.voterPasskeyCredentials).values({
+      const credentialData = {
         voterId: voter.id,
         credentialId: Buffer.from(credential.id).toString('base64'),
         publicKey: Buffer.from(credential.publicKey).toString('base64'),
         counter: credential.counter,
+      }
+
+      console.log('Storing voter passkey credential:', {
+        voterId: voterId,
+        voterDbId: voter.id,
+        credentialIdLength: credentialData.credentialId.length,
+        credentialIdPreview: credentialData.credentialId.substring(0, 20) + '...',
+        rpID: getRpID(),
+        origin: getExpectedOrigin()
       })
+
+      await db.insert(schema.voterPasskeyCredentials).values(credentialData)
 
       await redis.del(`voter_register_challenge:${voterId}`)
       return NextResponse.json({ success: true })

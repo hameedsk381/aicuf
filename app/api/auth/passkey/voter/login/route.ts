@@ -35,10 +35,32 @@ export async function POST(req: Request) {
       const voter = await db.query.voters.findFirst({ where: eq(schema.voters.voterId, voterId) })
       if (!voter) return NextResponse.json({ error: 'Voter not found' }, { status: 404 })
 
+      console.log('Looking up passkey credentials for voter:', { voterId, voterDbId: voter.id })
+
       const creds = await db.select().from(schema.voterPasskeyCredentials).where(eq(schema.voterPasskeyCredentials.voterId, voter.id))
-      if (creds.length === 0) return NextResponse.json({ error: 'No passkeys registered for this voter' }, { status: 404 })
+
+      console.log('Found credentials:', {
+        count: creds.length,
+        credentialIds: creds.map(c => ({
+          id: c.id,
+          credentialIdPreview: c.credentialId.substring(0, 20) + '...',
+          credentialIdLength: c.credentialId.length
+        }))
+      })
+
+      if (creds.length === 0) {
+        console.error('No passkeys found for voter:', voterId)
+        return NextResponse.json({ error: 'No passkeys registered for this voter. Please register your passkey first.' }, { status: 404 })
+      }
 
       const allowCredentials = creds.map(c => ({ id: base64ToBase64url(c.credentialId), type: 'public-key' as const }))
+
+      console.log('Sending allowCredentials to browser:', {
+        rpID: getRpID(),
+        credentialCount: allowCredentials.length,
+        credentialIdPreviews: allowCredentials.map(c => c.id.substring(0, 20) + '...')
+      })
+
       const options = await generateAuthenticationOptions({ rpID: getRpID(), userVerification: 'required', timeout: 60000, allowCredentials })
 
       await redis.set(`voter_login_challenge:${voterId}`, options.challenge, 'EX', 60)
