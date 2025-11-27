@@ -28,6 +28,7 @@
     "drizzle-orm": "^0.44.7",
     "formidable": "^3.5.4",
     "framer-motion": "latest",
+    "ioredis": "^5.8.2",
     "jose": "^6.1.2",
     "lucide-react": "^0.454.0",
     "minio": "^8.0.6",

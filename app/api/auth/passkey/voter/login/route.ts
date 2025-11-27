@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server'
 import { db, schema } from '@/lib/db'
 import { eq } from 'drizzle-orm'
 import { generateAuthenticationOptions, verifyAuthenticationResponse } from '@simplewebauthn/server'
-
-const voterLoginChallenges: Record<string, string> = {}
+import { redis } from '@/lib/redis'
 
 function base64ToBase64url(base64: string): string {
   return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
@@ -16,12 +15,16 @@ function base64urlToBase64(base64url: string): string {
 }
 
 function getRpID(): string {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-  return new URL(siteUrl).hostname
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aptsaicuf.com'
+  try {
+    return new URL(siteUrl).hostname
+  } catch (e) {
+    return 'aptsaicuf.com'
+  }
 }
 
 function getExpectedOrigin(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+  return process.env.NEXT_PUBLIC_SITE_URL || 'https://aptsaicuf.com'
 }
 
 export async function POST(req: Request) {
@@ -35,15 +38,17 @@ export async function POST(req: Request) {
       const creds = await db.select().from(schema.voterPasskeyCredentials).where(eq(schema.voterPasskeyCredentials.voterId, voter.id))
       if (creds.length === 0) return NextResponse.json({ error: 'No passkeys registered for this voter' }, { status: 404 })
 
-      const allowCredentials = creds.map(c => ({ id: base64ToBase64url(c.credentialId), type: 'public-key' as const, transports: ['internal'] as any }))
+      const allowCredentials = creds.map(c => ({ id: base64ToBase64url(c.credentialId), type: 'public-key' as const }))
       const options = await generateAuthenticationOptions({ rpID: getRpID(), userVerification: 'required', timeout: 60000, allowCredentials })
-      voterLoginChallenges[voterId] = options.challenge
+
+      await redis.set(`voter_login_challenge:${voterId}`, options.challenge, 'EX', 60)
+
       return NextResponse.json(options)
     }
 
     if (step === 'verify' && assertionResponse) {
-      const expected = voterLoginChallenges[voterId]
-      if (!expected) return NextResponse.json({ error: 'No challenge found' }, { status: 400 })
+      const expected = await redis.get(`voter_login_challenge:${voterId}`)
+      if (!expected) return NextResponse.json({ error: 'Challenge expired or not found' }, { status: 400 })
 
       const voter = await db.query.voters.findFirst({ where: eq(schema.voters.voterId, voterId) })
       if (!voter) return NextResponse.json({ error: 'Voter not found' }, { status: 404 })
@@ -84,7 +89,9 @@ export async function POST(req: Request) {
         maxAge: 60 * 60 * 24,
         path: '/',
       })
-      delete voterLoginChallenges[voterId]
+
+      await redis.del(`voter_login_challenge:${voterId}`)
+
       return response
     }
 

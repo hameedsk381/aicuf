@@ -2,16 +2,19 @@ import { NextResponse } from 'next/server'
 import { db, schema } from '@/lib/db'
 import { eq } from 'drizzle-orm'
 import { generateRegistrationOptions, verifyRegistrationResponse } from '@simplewebauthn/server'
-
-const voterChallengeStore: Record<string, string> = {}
+import { redis } from '@/lib/redis'
 
 function getRpID(): string {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-  return new URL(siteUrl).hostname
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aptsaicuf.com'
+  try {
+    return new URL(siteUrl).hostname
+  } catch (e) {
+    return 'aptsaicuf.com'
+  }
 }
 
 function getExpectedOrigin(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+  return process.env.NEXT_PUBLIC_SITE_URL || 'https://aptsaicuf.com'
 }
 
 export async function POST(req: Request) {
@@ -36,14 +39,16 @@ export async function POST(req: Request) {
           authenticatorAttachment: 'platform',
         },
       })
-      voterChallengeStore[voterId] = options.challenge
+
+      await redis.set(`voter_register_challenge:${voterId}`, options.challenge, 'EX', 60)
+
       return NextResponse.json(options)
     }
 
     if (step === 'verify' && attestationResponse) {
-      const expectedChallenge = voterChallengeStore[voterId]
+      const expectedChallenge = await redis.get(`voter_register_challenge:${voterId}`)
       if (!expectedChallenge) {
-        return NextResponse.json({ error: 'No challenge found' }, { status: 400 })
+        return NextResponse.json({ error: 'Challenge expired or not found' }, { status: 400 })
       }
 
       const verification = await verifyRegistrationResponse({
@@ -70,7 +75,7 @@ export async function POST(req: Request) {
         counter: credential.counter,
       })
 
-      delete voterChallengeStore[voterId]
+      await redis.del(`voter_register_challenge:${voterId}`)
       return NextResponse.json({ success: true })
     }
 

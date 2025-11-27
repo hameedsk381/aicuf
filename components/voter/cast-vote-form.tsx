@@ -35,6 +35,7 @@ export default function CastVoteForm() {
       if (!verifyRes.ok) throw new Error(verifyData.error || "Passkey authentication failed")
       setStep("vote")
     } catch (e) {
+      console.error("Passkey authentication error:", e)
       setError(e instanceof Error ? e.message : "Authentication failed")
     } finally {
       setIsLoading(false)

@@ -3,9 +3,7 @@ import { db } from '@/lib/db';
 import { registrations, passkeyCredentials } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { generateAuthenticationOptions, verifyAuthenticationResponse } from '@simplewebauthn/server';
-
-// In-memory store for login challenges (demo only)
-const loginChallengeStore: Record<string, string> = {};
+import { redis } from '@/lib/redis';
 
 // Helper to convert base64 to base64url
 function base64ToBase64url(base64: string): string {
@@ -23,13 +21,17 @@ function base64urlToBase64(base64url: string): string {
 
 // Get rpID from environment - use hostname from NEXT_PUBLIC_SITE_URL
 function getRpID(): string {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    return new URL(siteUrl).hostname;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aptsaicuf.com';
+    try {
+        return new URL(siteUrl).hostname;
+    } catch (e) {
+        return 'aptsaicuf.com';
+    }
 }
 
 // Get expected origin
 function getExpectedOrigin(): string {
-    return process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    return process.env.NEXT_PUBLIC_SITE_URL || 'https://aptsaicuf.com';
 }
 
 export async function POST(req: Request) {
@@ -43,18 +45,18 @@ export async function POST(req: Request) {
                 return NextResponse.json({ error: 'User not found' }, { status: 404 });
             }
             const credentials = await db.select().from(passkeyCredentials).where(eq(passkeyCredentials.userId, user.id));
-            
+
             console.log('Found credentials for user:', {
                 email,
                 userId: user.id,
                 credentialCount: credentials.length,
                 credentialIds: credentials.map(c => c.credentialId.substring(0, 20) + '...')
             });
-            
+
             if (credentials.length === 0) {
                 return NextResponse.json({ error: 'No passkeys registered for this user' }, { status: 404 });
             }
-            
+
             // Convert base64 credential IDs from DB to base64url format for the browser
             const allowCredentials = credentials.map(cred => {
                 // SimpleWebAuthn expects base64url string format
@@ -64,22 +66,24 @@ export async function POST(req: Request) {
                     type: 'public-key' as const,
                 };
             });
-            
+
             const options = await generateAuthenticationOptions({
                 rpID: getRpID(),
                 userVerification: 'preferred',
                 timeout: 60000,
                 allowCredentials,
             });
-            loginChallengeStore[email] = options.challenge;
+
+            await redis.set(`member_login_challenge:${email}`, options.challenge, 'EX', 60);
+
             return NextResponse.json(options);
         }
 
         // Step 2: verify assertion response
         if (step === 'verify' && assertionResponse) {
-            const expectedChallenge = loginChallengeStore[email];
+            const expectedChallenge = await redis.get(`member_login_challenge:${email}`);
             if (!expectedChallenge) {
-                return NextResponse.json({ error: 'No challenge found' }, { status: 400 });
+                return NextResponse.json({ error: 'Challenge expired or not found' }, { status: 400 });
             }
 
             const user = await db.query.registrations.findFirst({ where: eq(registrations.emailId, email) });
@@ -132,7 +136,9 @@ export async function POST(req: Request) {
                 maxAge: 60 * 60 * 24,
                 path: '/',
             });
-            delete loginChallengeStore[email];
+
+            await redis.del(`member_login_challenge:${email}`);
+
             return response;
         }
 

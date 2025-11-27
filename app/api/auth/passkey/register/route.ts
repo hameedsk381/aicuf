@@ -3,19 +3,21 @@ import { db } from '@/lib/db';
 import { registrations, passkeyCredentials } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { generateRegistrationOptions, verifyRegistrationResponse } from '@simplewebauthn/server';
-
-// In-memory store for challenges (for demo purposes only)
-const challengeStore: Record<string, string> = {};
+import { redis } from '@/lib/redis';
 
 // Get rpID from environment - use hostname from NEXT_PUBLIC_SITE_URL
 function getRpID(): string {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    return new URL(siteUrl).hostname;
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aptsaicuf.com';
+    try {
+        return new URL(siteUrl).hostname;
+    } catch (e) {
+        return 'aptsaicuf.com';
+    }
 }
 
 // Get expected origin
 function getExpectedOrigin(): string {
-    return process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    return process.env.NEXT_PUBLIC_SITE_URL || 'https://aptsaicuf.com';
 }
 
 export async function POST(req: Request) {
@@ -41,15 +43,17 @@ export async function POST(req: Request) {
                     authenticatorAttachment: 'platform',
                 },
             });
-            challengeStore[email] = options.challenge;
+
+            await redis.set(`member_register_challenge:${email}`, options.challenge, 'EX', 60);
+
             return NextResponse.json(options);
         }
 
         // Step 2: verify registration response and store credential
         if (step === 'verify' && attestationResponse) {
-            const expectedChallenge = challengeStore[email];
+            const expectedChallenge = await redis.get(`member_register_challenge:${email}`);
             if (!expectedChallenge) {
-                return NextResponse.json({ error: 'No challenge found' }, { status: 400 });
+                return NextResponse.json({ error: 'Challenge expired or not found' }, { status: 400 });
             }
 
             const verification = await verifyRegistrationResponse({
@@ -84,7 +88,8 @@ export async function POST(req: Request) {
 
             await db.insert(passkeyCredentials).values(credentialData);
 
-            delete challengeStore[email];
+            await redis.del(`member_register_challenge:${email}`);
+
             return NextResponse.json({ success: true });
         }
 
@@ -97,4 +102,3 @@ export async function POST(req: Request) {
         }, { status: 500 });
     }
 }
-
