@@ -4,6 +4,38 @@ import { eq } from 'drizzle-orm'
 import { generateAuthenticationOptions, verifyAuthenticationResponse } from '@simplewebauthn/server'
 import { redis } from '@/lib/redis'
 
+// Fallback in-memory storage when Redis is unavailable
+const memoryStore: Record<string, string> = {}
+
+async function setChallenge(key: string, value: string, ttlSeconds: number): Promise<void> {
+  try {
+    await redis.set(key, value, 'EX', ttlSeconds)
+  } catch (error) {
+    console.warn('Redis unavailable, using in-memory storage:', error instanceof Error ? error.message : error)
+    memoryStore[key] = value
+    // Clean up after TTL
+    setTimeout(() => delete memoryStore[key], ttlSeconds * 1000)
+  }
+}
+
+async function getChallenge(key: string): Promise<string | null> {
+  try {
+    return await redis.get(key)
+  } catch (error) {
+    console.warn('Redis unavailable, using in-memory storage:', error instanceof Error ? error.message : error)
+    return memoryStore[key] || null
+  }
+}
+
+async function deleteChallenge(key: string): Promise<void> {
+  try {
+    await redis.del(key)
+  } catch (error) {
+    console.warn('Redis unavailable, using in-memory storage:', error instanceof Error ? error.message : error)
+    delete memoryStore[key]
+  }
+}
+
 function base64ToBase64url(base64: string): string {
   return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
 }
@@ -63,13 +95,13 @@ export async function POST(req: Request) {
 
       const options = await generateAuthenticationOptions({ rpID: getRpID(), userVerification: 'preferred', timeout: 60000, allowCredentials })
 
-      await redis.set(`voter_login_challenge:${voterId}`, options.challenge, 'EX', 60)
+      await setChallenge(`voter_login_challenge:${voterId}`, options.challenge, 60)
 
       return NextResponse.json(options)
     }
 
     if (step === 'verify' && assertionResponse) {
-      const expected = await redis.get(`voter_login_challenge:${voterId}`)
+      const expected = await getChallenge(`voter_login_challenge:${voterId}`)
       if (!expected) return NextResponse.json({ error: 'Challenge expired or not found' }, { status: 400 })
 
       const voter = await db.query.voters.findFirst({ where: eq(schema.voters.voterId, voterId) })
@@ -112,7 +144,7 @@ export async function POST(req: Request) {
         path: '/',
       })
 
-      await redis.del(`voter_login_challenge:${voterId}`)
+      await deleteChallenge(`voter_login_challenge:${voterId}`)
 
       return response
     }
@@ -120,6 +152,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   } catch (error) {
     console.error('Voter passkey login error:', error)
-    return NextResponse.json({ error: 'Login failed' }, { status: 500 })
+    return NextResponse.json({ error: 'Login failed', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
 }

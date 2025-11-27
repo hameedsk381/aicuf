@@ -4,6 +4,37 @@ import { eq } from 'drizzle-orm'
 import { generateRegistrationOptions, verifyRegistrationResponse } from '@simplewebauthn/server'
 import { redis } from '@/lib/redis'
 
+// Fallback in-memory storage when Redis is unavailable
+const memoryStore: Record<string, string> = {}
+
+async function setChallenge(key: string, value: string, ttlSeconds: number): Promise<void> {
+  try {
+    await redis.set(key, value, 'EX', ttlSeconds)
+  } catch (error) {
+    console.warn('Redis unavailable, using in-memory storage:', error instanceof Error ? error.message : error)
+    memoryStore[key] = value
+    setTimeout(() => delete memoryStore[key], ttlSeconds * 1000)
+  }
+}
+
+async function getChallenge(key: string): Promise<string | null> {
+  try {
+    return await redis.get(key)
+  } catch (error) {
+    console.warn('Redis unavailable, using in-memory storage:', error instanceof Error ? error.message : error)
+    return memoryStore[key] || null
+  }
+}
+
+async function deleteChallenge(key: string): Promise<void> {
+  try {
+    await redis.del(key)
+  } catch (error) {
+    console.warn('Redis unavailable, using in-memory storage:', error instanceof Error ? error.message : error)
+    delete memoryStore[key]
+  }
+}
+
 function getRpID(): string {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aptsaicuf.com'
   try {
@@ -39,13 +70,13 @@ export async function POST(req: Request) {
         },
       })
 
-      await redis.set(`voter_register_challenge:${voterId}`, options.challenge, 'EX', 60)
+      await setChallenge(`voter_register_challenge:${voterId}`, options.challenge, 60)
 
       return NextResponse.json(options)
     }
 
     if (step === 'verify' && attestationResponse) {
-      const expectedChallenge = await redis.get(`voter_register_challenge:${voterId}`)
+      const expectedChallenge = await getChallenge(`voter_register_challenge:${voterId}`)
       if (!expectedChallenge) {
         return NextResponse.json({ error: 'Challenge expired or not found' }, { status: 400 })
       }
@@ -85,7 +116,7 @@ export async function POST(req: Request) {
 
       await db.insert(schema.voterPasskeyCredentials).values(credentialData)
 
-      await redis.del(`voter_register_challenge:${voterId}`)
+      await deleteChallenge(`voter_register_challenge:${voterId}`)
       return NextResponse.json({ success: true })
     }
 
