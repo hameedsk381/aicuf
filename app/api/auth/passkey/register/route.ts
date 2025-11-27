@@ -39,8 +39,7 @@ export async function POST(req: Request) {
                 attestationType: 'none',
                 authenticatorSelection: {
                     residentKey: 'preferred',
-                    userVerification: 'required',
-                    authenticatorAttachment: 'platform',
+                    userVerification: 'preferred',
                 },
             });
 

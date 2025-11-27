@@ -61,7 +61,7 @@ export async function POST(req: Request) {
         credentialIdPreviews: allowCredentials.map(c => c.id.substring(0, 20) + '...')
       })
 
-      const options = await generateAuthenticationOptions({ rpID: getRpID(), userVerification: 'required', timeout: 60000, allowCredentials })
+      const options = await generateAuthenticationOptions({ rpID: getRpID(), userVerification: 'preferred', timeout: 60000, allowCredentials })
 
       await redis.set(`voter_login_challenge:${voterId}`, options.challenge, 'EX', 60)
 
