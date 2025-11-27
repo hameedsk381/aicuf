@@ -46,7 +46,7 @@ export default function CastVoteForm() {
       const { startAuthentication } = await import("@simplewebauthn/browser")
 
       console.log('Calling browser passkey API...')
-      const authResp = await startAuthentication(opts as PublicKeyCredentialRequestOptionsJSON)
+      const authResp = await startAuthentication({ optionsJSON: opts as PublicKeyCredentialRequestOptionsJSON })
       console.log('Browser returned authentication response')
 
       const verifyRes = await fetch("/api/auth/passkey/voter/login", {

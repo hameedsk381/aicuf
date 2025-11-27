@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: 'Voter not approved' }, { status: 403 })
     }
 
-    const existing = await db.select().from(votesTable).where(eq(votesTable.voterId, authId))
+    const existing = await db.select().from(votes).where(eq(votes.voterId, authId))
     if (existing.length > 0) {
       return NextResponse.json({ success: false, message: 'You have already submitted your ballot' }, { status: 409 })
     }
