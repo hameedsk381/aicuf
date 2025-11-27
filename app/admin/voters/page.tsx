@@ -6,8 +6,6 @@ export default function AdminVotersPage() {
   const [voters, setVoters] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [form, setForm] = useState({ name: "", designation: "", unitName: "", mobileNo: "" })
-  const [saving, setSaving] = useState(false)
 
   const load = async () => {
     setIsLoading(true)
@@ -25,25 +23,6 @@ export default function AdminVotersPage() {
 
   useEffect(() => { load() }, [])
 
-  const createVoter = async () => {
-    setSaving(true)
-    setError(null)
-    try {
-      const res = await fetch("/api/admin/voters", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message || "Failed to create voter")
-      setForm({ name: "", designation: "", unitName: "", mobileNo: "" })
-      await load()
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to create voter")
-    } finally {
-      setSaving(false)
-    }
-  }
 
   const updateVoter = async (id: number, updates: any) => {
     setError(null)
@@ -78,20 +57,6 @@ export default function AdminVotersPage() {
       <h1 className="text-2xl font-light text-maroon mb-4">Registered Voters</h1>
       {error && <div className="p-3 bg-red-50 border border-red-200 text-red-800 text-sm mb-4">{error}</div>}
 
-      <div className="bg-white border border-primary/10 rounded p-4 mb-6">
-        <h2 className="text-lg font-light text-maroon mb-3">Add Voter</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          <input className="border px-2 py-2 text-sm" placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-          <input className="border px-2 py-2 text-sm" placeholder="Designation" value={form.designation} onChange={(e) => setForm({ ...form, designation: e.target.value })} />
-          <input className="border px-2 py-2 text-sm" placeholder="Unit" value={form.unitName} onChange={(e) => setForm({ ...form, unitName: e.target.value })} />
-          <input className="border px-2 py-2 text-sm" placeholder="Mobile" value={form.mobileNo} onChange={(e) => setForm({ ...form, mobileNo: e.target.value })} />
-        </div>
-        <div className="mt-3">
-          <button onClick={createVoter} disabled={saving} className="px-4 py-2 bg-maroon text-white">
-            {saving ? "Saving..." : "Add Voter"}
-          </button>
-        </div>
-      </div>
 
       {isLoading ? (
         <div>Loading...</div>

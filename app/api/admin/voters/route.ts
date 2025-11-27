@@ -112,7 +112,13 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ success: false, message: "Voter id is required" }, { status: 400 })
     }
 
-    await db.delete(schema.voters).where(eq(schema.voters.id, parseInt(id)))
+    const voterIdInt = parseInt(id)
+
+    await db.transaction(async (tx) => {
+      await tx.delete(schema.votes).where(eq(schema.votes.voterId, voterIdInt))
+      await tx.delete(schema.voterPasskeyCredentials).where(eq(schema.voterPasskeyCredentials.voterId, voterIdInt))
+      await tx.delete(schema.voters).where(eq(schema.voters.id, voterIdInt))
+    })
     return NextResponse.json({ success: true })
   } catch (error) {
     return NextResponse.json(
