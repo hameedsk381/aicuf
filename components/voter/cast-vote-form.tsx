@@ -23,22 +23,28 @@ export default function CastVoteForm() {
         body: JSON.stringify({ voterId, step: "options" }),
         credentials: "include",
       })
-      const opts = await optsRes.json()
+      const raw = await optsRes.json()
 
       if (!optsRes.ok) {
-        console.error('Failed to get passkey options:', opts)
-        throw new Error(opts.error || "Failed to get options")
+        console.error('Failed to get passkey options:', raw)
+        throw new Error(raw.error || "Failed to get options")
+      }
+
+      const opts = raw?.challenge ? raw : (raw?.optionsJSON ?? raw?.options ?? raw?.publicKey ?? raw?.requestOptions)
+      if (!opts?.challenge) {
+        console.error('Invalid authentication options structure:', raw)
+        throw new Error("Invalid authentication options")
       }
 
       console.log('Received authentication options:', {
-        rpId: opts.rpId,
-        allowCredentialsCount: opts.allowCredentials?.length || 0
+        rpId: (opts as any).rpId,
+        allowCredentialsCount: (opts as any).allowCredentials?.length || 0
       })
 
       const { startAuthentication } = await import("@simplewebauthn/browser")
 
       console.log('Calling browser passkey API...')
-      const authResp = await startAuthentication(opts)
+      const authResp = await startAuthentication(opts as any)
       console.log('Browser returned authentication response')
 
       const verifyRes = await fetch("/api/auth/passkey/voter/login", {

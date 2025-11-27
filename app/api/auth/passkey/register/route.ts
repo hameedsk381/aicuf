@@ -33,7 +33,7 @@ export async function POST(req: Request) {
             const options = await generateRegistrationOptions({
                 rpName: 'AICUF',
                 rpID: getRpID(),
-                userID: new Uint8Array(Buffer.from(user.id.toString())),
+                userID: new TextEncoder().encode(user.id.toString()),
                 userName: user.emailId,
                 timeout: 60000,
                 attestationType: 'none',

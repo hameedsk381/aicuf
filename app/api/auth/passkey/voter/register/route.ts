@@ -60,7 +60,7 @@ export async function POST(req: Request) {
       const options = await generateRegistrationOptions({
         rpName: 'APTSAICUF',
         rpID: getRpID(),
-        userID: new Uint8Array(Buffer.from(voter.id.toString())),
+        userID: new TextEncoder().encode(voter.id.toString()),
         userName: voter.voterId,
         timeout: 60000,
         attestationType: 'none',
