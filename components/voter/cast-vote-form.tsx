@@ -90,12 +90,15 @@ export default function CastVoteForm() {
 
   return (
     <div className="grid gap-6">
-      {error && <div className="p-3 bg-red-50 border border-red-200 text-red-800 text-sm">{error}</div>}
+      {error && <div className="p-3 bg-red-50 border border-red-200 text-red-800 text-sm"><strong>Error:</strong> {error}</div>}
       {step === "id" && (
         <>
           <div className="grid gap-2">
             <label htmlFor="voterId" className="text-sm font-light">Voter ID</label>
             <Input id="voterId" value={voterId} onChange={(e) => setVoterId(e.target.value)} placeholder="Enter your Voter ID" />
+            <p className="text-xs text-muted-foreground">
+              Use the same Voter ID you registered with. Each passkey is linked to a specific Voter ID.
+            </p>
           </div>
           <Button onClick={startAuth} disabled={!voterId || isLoading} className="rounded-none bg-maroon hover:bg-maroon/90 text-white">
             {isLoading ? "Authenticating..." : "Authenticate and Continue"}
