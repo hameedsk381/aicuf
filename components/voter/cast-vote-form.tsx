@@ -19,6 +19,7 @@ export default function CastVoteForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ voterId, step: "options" }),
+        credentials: "include",
       })
       const opts = await optsRes.json()
       if (!optsRes.ok) throw new Error(opts.error || "Failed to get options")
@@ -28,6 +29,7 @@ export default function CastVoteForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ voterId, step: "verify", assertionResponse: authResp }),
+        credentials: "include",
       })
       const verifyData = await verifyRes.json()
       if (!verifyRes.ok) throw new Error(verifyData.error || "Passkey authentication failed")
@@ -47,6 +49,7 @@ export default function CastVoteForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ voterId, choice }),
+        credentials: "include",
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || "Failed to cast vote")
@@ -94,4 +97,3 @@ export default function CastVoteForm() {
     </div>
   )
 }
-

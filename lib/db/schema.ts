@@ -87,3 +87,10 @@ export const voterPasskeyCredentials = pgTable('voter_passkey_credentials', {
   transports: varchar('transports', { length: 255 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })
+
+export const votes = pgTable('votes', {
+  id: serial('id').primaryKey(),
+  voterId: integer('voter_id').references(() => voters.id),
+  choice: text('choice').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
