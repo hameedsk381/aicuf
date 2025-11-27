@@ -11,7 +11,7 @@ else
   # Run migrations (external PostgreSQL should already be available)
   echo "📦 Running database migrations..."
   if [ -f "/app/scripts/migrate.ts" ]; then
-    bun run /app/scripts/migrate.ts
+    tsx /app/scripts/migrate.ts
     if [ $? -eq 0 ]; then
       echo "✅ Migrations completed successfully"
     else
@@ -24,7 +24,7 @@ else
   # Create admin user automatically
   echo "👤 Creating/updating admin user..."
   if [ -f "/app/scripts/create-admin.ts" ]; then
-    bun run /app/scripts/create-admin.ts
+    tsx /app/scripts/create-admin.ts
     if [ $? -eq 0 ]; then
       echo "✅ Admin user setup completed"
     else
