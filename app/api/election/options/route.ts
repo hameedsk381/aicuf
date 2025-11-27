@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm"
 export async function GET() {
   try {
     const approved = await db.select().from(schema.nominations).where(eq(schema.nominations.status, 'approved'))
-    const grouped: Record<string, any[]> = {}
+    const grouped: Record<string, { id: number; name: string; unitName: string }[]> = {}
     for (const nom of approved) {
       const key = nom.contestingFor
       grouped[key] ||= []
@@ -20,4 +20,3 @@ export async function GET() {
     return NextResponse.json({ success: false, message: 'Failed to load election options', error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
 }
-

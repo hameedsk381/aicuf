@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { db, schema } from "@/lib/db"
+import { votes } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
 import { sanitizeInput } from "@/lib/sanitize"
 
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     const approved = await db.select().from(schema.nominations).where(eq(schema.nominations.status, 'approved'))
     const byId: Record<number, { contestingFor: string }> = {}
-    for (const n of approved as any[]) {
+    for (const n of approved as Array<{ id: number; contestingFor: string }>) {
       byId[n.id] = { contestingFor: n.contestingFor }
     }
 
@@ -61,10 +62,10 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const values = selections.map((sel: any) => ({
+    const values: Array<{ voterId: number; position: string; nominationId: number; createdAt: Date }> = selections.map((sel: { position: string; nominationId: number | string }) => ({
       voterId: authId,
       position: sanitizeInput(sel.position),
-      nominationId: parseInt(sel.nominationId),
+      nominationId: typeof sel.nominationId === 'string' ? parseInt(sel.nominationId) : sel.nominationId,
       createdAt: new Date(),
     }))
 
@@ -72,11 +73,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: 'No valid selections to record' }, { status: 400 })
     }
 
-    await db.insert(votesTable).values(values as any)
+    await db.insert(votes).values(values)
 
     return NextResponse.json({ success: true })
   } catch (error) {
     return NextResponse.json({ success: false, message: 'Failed to cast vote', error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
 }
-const votesTable: any = (schema as any).votes
+// using typed table export from schema

@@ -10,7 +10,7 @@ export async function GET() {
 
     const results: Record<string, { candidateId: number; name: string; unitName: string; count: number }[]> = {}
 
-    for (const v of votes as any[]) {
+    for (const v of votes as Array<{ position: string; nominationId: number }>) {
       const position = v.position
       const nom = nomById.get(v.nominationId)
       if (!position || !nom) continue
@@ -26,4 +26,3 @@ export async function GET() {
     return NextResponse.json({ success: false, message: 'Failed to load results', error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
 }
-

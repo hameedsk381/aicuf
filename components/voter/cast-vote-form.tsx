@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import type { PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/browser"
 
 export default function CastVoteForm() {
   const [voterId, setVoterId] = useState("")
@@ -45,7 +46,7 @@ export default function CastVoteForm() {
       const { startAuthentication } = await import("@simplewebauthn/browser")
 
       console.log('Calling browser passkey API...')
-      const authResp = await startAuthentication(opts as any)
+      const authResp = await startAuthentication(opts as PublicKeyCredentialRequestOptionsJSON)
       console.log('Browser returned authentication response')
 
       const verifyRes = await fetch("/api/auth/passkey/voter/login", {
@@ -62,9 +63,10 @@ export default function CastVoteForm() {
       const optionsRes = await fetch('/api/election/options')
       const optionsData = await optionsRes.json()
       if (!optionsRes.ok || !optionsData.success) throw new Error(optionsData.message || 'Failed to load election options')
-      setPositions(optionsData.positions)
+      const positionsLoaded = optionsData.positions as Array<{ position: string; candidates: { id: number; name: string; unitName: string }[] }>
+      setPositions(positionsLoaded)
       const init: Record<string, number | null> = {}
-      for (const p of optionsData.positions as any[]) {
+      for (const p of positionsLoaded) {
         init[p.position] = null
       }
       setSelections(init)
