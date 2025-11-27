@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import VoterPasskeySetup from "./voter-passkey-setup"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import DownloadVoterId from "./download-voter-id"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -96,13 +97,51 @@ export default function VoterRegistrationForm() {
 
       <div className="grid gap-2">
         <label htmlFor="designation" className="text-sm font-light">Designation</label>
-        <Input id="designation" {...register("designation")} placeholder="e.g., Member, Coordinator" />
+        <Select onValueChange={(v) => { (document.getElementById("designation-hidden") as HTMLInputElement).value = v }}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select designation" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="President">President</SelectItem>
+            <SelectItem value="Vice President">Vice President</SelectItem>
+            <SelectItem value="Secretary">Secretary</SelectItem>
+            <SelectItem value="Joint Secretary">Joint Secretary</SelectItem>
+            <SelectItem value="Treasurer">Treasurer</SelectItem>
+            <SelectItem value="Social Media Coordinator">Social Media Coordinator</SelectItem>
+            <SelectItem value="Event Coordinator">Event Coordinator</SelectItem>
+            <SelectItem value="National Team Member">National Team Member</SelectItem>
+            <SelectItem value="National Council Member">National Council Member</SelectItem>
+            <SelectItem value="Delegate">Delegate</SelectItem>
+            <SelectItem value="Member">Member</SelectItem>
+          </SelectContent>
+        </Select>
+        <input id="designation-hidden" type="hidden" {...register("designation")} />
         {errors.designation && <p className="text-xs text-red-600">{errors.designation.message}</p>}
       </div>
 
       <div className="grid gap-2">
         <label htmlFor="unitName" className="text-sm font-light">Unit Name</label>
-        <Input id="unitName" {...register("unitName")} placeholder="Enter your unit name" />
+        <Select onValueChange={(v) => { (document.getElementById("unitName-hidden") as HTMLInputElement).value = v }}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select unit" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ANDHRA LOYOLA COLLEGE">ANDHRA LOYOLA COLLEGE</SelectItem>
+            <SelectItem value="ANDHRA LOYOLA INSTITUTE OF ENGINEERING AND TECHNOLOGY">ANDHRA LOYOLA INSTITUTE OF ENGINEERING AND TECHNOLOGY</SelectItem>
+            <SelectItem value="MARIS STELLA COLLEGE">MARIS STELLA COLLEGE</SelectItem>
+            <SelectItem value="LOYOLA ACADEMY">LOYOLA ACADEMY</SelectItem>
+            <SelectItem value="ST. THERASSA, ELURU">ST. THERASSA, ELURU</SelectItem>
+            <SelectItem value="ST. JOSEPH, VIZAG">ST. JOSEPH, VIZAG</SelectItem>
+            <SelectItem value="VICTORIA COLLEGE OF PHARMACY">VICTORIA COLLEGE OF PHARMACY</SelectItem>
+            <SelectItem value="PULIVENDULA LOYOLA">PULIVENDULA LOYOLA</SelectItem>
+            <SelectItem value="ST. PIOUS">ST. PIOUS</SelectItem>
+            <SelectItem value="ST. ANN'S, VIZAG">ST. ANN'S, VIZAG</SelectItem>
+            <SelectItem value="NIRMALA COLLEGE OF PHARMACY">NIRMALA COLLEGE OF PHARMACY</SelectItem>
+            <SelectItem value="JMJ TENALI">JMJ TENALI</SelectItem>
+            <SelectItem value="LITTLE FLOWERS">LITTLE FLOWERS</SelectItem>
+          </SelectContent>
+        </Select>
+        <input id="unitName-hidden" type="hidden" {...register("unitName")} />
         {errors.unitName && <p className="text-xs text-red-600">{errors.unitName.message}</p>}
       </div>
 

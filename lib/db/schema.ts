@@ -75,6 +75,7 @@ export const voters = pgTable("voters", {
   unitName: varchar("unit_name", { length: 255 }).notNull(),
   mobileNo: varchar("mobile_no", { length: 20 }).notNull(),
   passkey: varchar("passkey", { length: 255 }),
+  status: varchar("status", { length: 20 }).notNull().default("pending"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 })
 

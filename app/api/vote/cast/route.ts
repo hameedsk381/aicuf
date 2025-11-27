@@ -28,6 +28,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: 'Voter ID mismatch' }, { status: 403 })
     }
 
+    const voter = await db.query.voters.findFirst({ where: eq(schema.voters.id, authId) })
+    if (!voter || voter.status !== 'approved') {
+      return NextResponse.json({ success: false, message: 'Voter not approved' }, { status: 403 })
+    }
+
     const existing = await db.select().from(votesTable).where(eq(votesTable.voterId, authId))
     if (existing.length > 0) {
       return NextResponse.json({ success: false, message: 'Vote already cast' }, { status: 409 })

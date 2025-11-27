@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
       designation,
       unitName,
       mobileNo,
+      status: "pending",
       createdAt: new Date(),
     })
 
