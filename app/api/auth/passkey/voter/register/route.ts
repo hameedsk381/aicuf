@@ -86,9 +86,10 @@ export async function POST(req: Request) {
 
       const credentialData = {
         voterId: voter.id,
-        credentialId: Buffer.from(credential.id).toString('base64'),
+        credentialId: credential.id, // store base64url as-is
         publicKey: Buffer.from(credential.publicKey).toString('base64'),
         counter: credential.counter,
+        transports: Array.isArray(credential.transports) ? credential.transports.join(',') : null,
       }
 
       console.log('Storing voter passkey credential:', {

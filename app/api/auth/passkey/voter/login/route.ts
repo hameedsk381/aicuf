@@ -92,8 +92,13 @@ export async function POST(req: Request) {
       const voter = await db.query.voters.findFirst({ where: eq(schema.voters.voterId, voterId) })
       if (!voter) return NextResponse.json({ error: 'Voter not found' }, { status: 404 })
 
-      const credIdBase64 = base64urlToBase64(assertionResponse.id)
-      const stored = await db.select().from(schema.voterPasskeyCredentials).where(eq(schema.voterPasskeyCredentials.credentialId, credIdBase64))
+      // First try base64url match against stored credentialId
+      let stored = await db.select().from(schema.voterPasskeyCredentials).where(eq(schema.voterPasskeyCredentials.credentialId, assertionResponse.id))
+      // Fallback: some older records may have stored base64 instead of base64url; try matching converted base64
+      if (stored.length === 0) {
+        const credIdBase64 = base64urlToBase64(assertionResponse.id)
+        stored = await db.select().from(schema.voterPasskeyCredentials).where(eq(schema.voterPasskeyCredentials.credentialId, credIdBase64))
+      }
       if (stored.length === 0) return NextResponse.json({ error: 'Credential not registered' }, { status: 404 })
 
       const verification = await verifyAuthenticationResponse({
