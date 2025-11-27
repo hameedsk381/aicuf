@@ -73,7 +73,7 @@ export default function VoterRegistrationForm() {
             <p className="text-sm text-muted-foreground">
               Set up your device passkey (fingerprint/Face ID/PIN) to complete registration.
             </p>
-            <VoterPasskeySetup voterId={voterId} onSuccess={() => setPasskeyDone(true)} auto />
+            <VoterPasskeySetup voterId={voterId} onSuccess={() => setPasskeyDone(true)} />
           </>
         )}
       </div>
@@ -112,7 +112,7 @@ export default function VoterRegistrationForm() {
         {errors.mobileNo && <p className="text-xs text-red-600">{errors.mobileNo.message}</p>}
       </div>
 
-      
+
 
       <Button type="submit" disabled={isSubmitting} className="rounded-none bg-maroon hover:bg-maroon/90 text-white">
         {isSubmitting ? "Registering..." : "Register as Voter"}

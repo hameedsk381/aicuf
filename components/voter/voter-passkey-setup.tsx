@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { startRegistration, startAuthentication } from "@simplewebauthn/browser"
+import { startRegistration } from "@simplewebauthn/browser"
 
-export default function VoterPasskeySetup({ voterId, onSuccess, auto = false }: { voterId: string; onSuccess?: () => void; auto?: boolean }) {
+export default function VoterPasskeySetup({ voterId, onSuccess }: { voterId: string; onSuccess?: () => void }) {
   const [isRegistering, setIsRegistering] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -19,6 +19,11 @@ export default function VoterPasskeySetup({ voterId, onSuccess, auto = false }: 
         body: JSON.stringify({ voterId, step: 'options' }),
       })
       const options = await optionsRes.json()
+
+      if (!optionsRes.ok) {
+        throw new Error(options.error || 'Failed to get registration options')
+      }
+
       const attResp = await startRegistration(options)
 
       const verifyRes = await fetch('/api/auth/passkey/voter/register', {
@@ -31,22 +36,33 @@ export default function VoterPasskeySetup({ voterId, onSuccess, auto = false }: 
       setSuccess(true)
       if (onSuccess) onSuccess()
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Passkey registration failed')
+      console.error('Passkey registration error:', e)
+      let errorMessage = 'Passkey registration failed'
+
+      if (e instanceof Error) {
+        if (e.name === 'NotAllowedError') {
+          errorMessage = 'Passkey registration blocked. Please ensure you are using HTTPS (not HTTP) and try again.'
+        } else if (e.name === 'SecurityError') {
+          errorMessage = 'Security error: Please ensure you are accessing the site via HTTPS.'
+        } else if (e.message.includes('HTTPS')) {
+          errorMessage = 'Passkeys require HTTPS. Please access the site via https://aptsaicuf.com'
+        } else {
+          errorMessage = e.message
+        }
+      }
+
+      setError(errorMessage)
     } finally {
       setIsRegistering(false)
     }
   }
 
-  useEffect(() => {
-    if (auto && !success && !isRegistering) {
-      handleRegister()
-    }
-  }, [auto, success, isRegistering])
-
   return (
     <div className="space-y-3">
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 text-red-800 text-sm">{error}</div>
+        <div className="p-3 bg-red-50 border border-red-200 text-red-800 text-sm">
+          <strong>Error:</strong> {error}
+        </div>
       )}
       {success ? (
         <div className="p-3 bg-green-50 border border-green-200 text-green-800 text-sm">
