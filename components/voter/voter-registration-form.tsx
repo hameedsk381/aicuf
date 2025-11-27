@@ -26,10 +26,13 @@ export default function VoterRegistrationForm() {
   const [passkeyDone, setPasskeyDone] = useState(false)
   const [lastData, setLastData] = useState<VoterFormData | null>(null)
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<VoterFormData>({
+  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<VoterFormData>({
     resolver: zodResolver(voterSchema),
     mode: "onChange",
   })
+
+  const designationValue = watch("designation")
+  const unitNameValue = watch("unitName")
 
   const onSubmit = async (data: VoterFormData) => {
     setIsSubmitting(true)
@@ -97,7 +100,7 @@ export default function VoterRegistrationForm() {
 
       <div className="grid gap-2">
         <label htmlFor="designation" className="text-sm font-light">Designation</label>
-        <Select onValueChange={(v) => { (document.getElementById("designation-hidden") as HTMLInputElement).value = v }}>
+        <Select value={designationValue} onValueChange={(v) => setValue("designation", v, { shouldValidate: true })}>
           <SelectTrigger>
             <SelectValue placeholder="Select designation" />
           </SelectTrigger>
@@ -115,13 +118,13 @@ export default function VoterRegistrationForm() {
             <SelectItem value="Member">Member</SelectItem>
           </SelectContent>
         </Select>
-        <input id="designation-hidden" type="hidden" {...register("designation")} />
+        <input type="hidden" {...register("designation")} />
         {errors.designation && <p className="text-xs text-red-600">{errors.designation.message}</p>}
       </div>
 
       <div className="grid gap-2">
         <label htmlFor="unitName" className="text-sm font-light">Unit Name</label>
-        <Select onValueChange={(v) => { (document.getElementById("unitName-hidden") as HTMLInputElement).value = v }}>
+        <Select value={unitNameValue} onValueChange={(v) => setValue("unitName", v, { shouldValidate: true })}>
           <SelectTrigger>
             <SelectValue placeholder="Select unit" />
           </SelectTrigger>
@@ -141,7 +144,7 @@ export default function VoterRegistrationForm() {
             <SelectItem value="LITTLE FLOWERS">LITTLE FLOWERS</SelectItem>
           </SelectContent>
         </Select>
-        <input id="unitName-hidden" type="hidden" {...register("unitName")} />
+        <input type="hidden" {...register("unitName")} />
         {errors.unitName && <p className="text-xs text-red-600">{errors.unitName.message}</p>}
       </div>
 
