@@ -10,6 +10,9 @@ export default function CastVoteForm() {
   const [step, setStep] = useState<"id" | "auth" | "vote" | "done">("id")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [positions, setPositions] = useState<{ position: string; candidates: { id: number; name: string; unitName: string }[] }[]>([])
+  const [selectedPosition, setSelectedPosition] = useState<string>("")
+  const [selectedNominationId, setSelectedNominationId] = useState<number | null>(null)
 
   const startAuth = async () => {
     setIsLoading(true)
@@ -57,6 +60,11 @@ export default function CastVoteForm() {
       if (!verifyRes.ok) throw new Error(verifyData.error || "Passkey authentication failed")
 
       console.log('Authentication successful')
+      // Load election options
+      const optionsRes = await fetch('/api/election/options')
+      const optionsData = await optionsRes.json()
+      if (!optionsRes.ok || !optionsData.success) throw new Error(optionsData.message || 'Failed to load election options')
+      setPositions(optionsData.positions)
       setStep("vote")
     } catch (e) {
       console.error("Passkey authentication error:", e)
@@ -73,7 +81,7 @@ export default function CastVoteForm() {
       const res = await fetch("/api/vote/cast", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ voterId, choice }),
+        body: JSON.stringify({ voterId, position: selectedPosition, nominationId: selectedNominationId }),
         credentials: "include",
       })
       const data = await res.json()
@@ -113,11 +121,33 @@ export default function CastVoteForm() {
       )}
       {step === "vote" && (
         <>
-          <div className="grid gap-2">
-            <label htmlFor="choice" className="text-sm font-light">Your Choice</label>
-            <Input id="choice" value={choice} onChange={(e) => setChoice(e.target.value)} placeholder="Type your vote" />
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <label className="text-sm font-light">Select Position</label>
+              <select className="border px-2 py-2" value={selectedPosition} onChange={(e) => { setSelectedPosition(e.target.value); setSelectedNominationId(null) }}>
+                <option value="">Select position</option>
+                {positions.map(p => (
+                  <option key={p.position} value={p.position}>{p.position}</option>
+                ))}
+              </select>
+            </div>
+
+            {selectedPosition && (
+              <div className="grid gap-2">
+                <label className="text-sm font-light">Select Candidate</label>
+                <div className="grid gap-2">
+                  {positions.find(p => p.position === selectedPosition)?.candidates.map(c => (
+                    <label key={c.id} className="flex items-center gap-2">
+                      <input type="radio" name="candidate" value={c.id} checked={selectedNominationId === c.id} onChange={() => setSelectedNominationId(c.id)} />
+                      <span className="text-sm">{c.name} — {c.unitName}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-          <Button onClick={castVote} disabled={!choice || isLoading} className="rounded-none bg-maroon hover:bg-maroon/90 text-white">
+
+          <Button onClick={castVote} disabled={!selectedPosition || !selectedNominationId || isLoading} className="rounded-none bg-maroon hover:bg-maroon/90 text-white mt-4">
             {isLoading ? "Submitting..." : "Cast Vote"}
           </Button>
         </>

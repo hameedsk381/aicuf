@@ -92,6 +92,8 @@ export const voterPasskeyCredentials = pgTable('voter_passkey_credentials', {
 export const votes = pgTable('votes', {
   id: serial('id').primaryKey(),
   voterId: integer('voter_id').references(() => voters.id),
-  choice: text('choice').notNull(),
+  position: varchar('position', { length: 100 }).notNull(),
+  nominationId: integer('nomination_id').references(() => nominations.id),
+  choice: text('choice'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 })

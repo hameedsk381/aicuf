@@ -18,10 +18,11 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
     const voterId = sanitizeInput(body.voterId || '')
-    const choice = sanitizeInput(body.choice || '')
+    const position = sanitizeInput(body.position || '')
+    const nominationId = parseInt(body.nominationId)
 
-    if (!voterId || !choice) {
-      return NextResponse.json({ success: false, message: 'voterId and choice are required' }, { status: 400 })
+    if (!voterId || !position || !nominationId) {
+      return NextResponse.json({ success: false, message: 'voterId, position and nominationId are required' }, { status: 400 })
     }
 
     if (voterId !== authVoterId) {
@@ -34,11 +35,12 @@ export async function POST(req: NextRequest) {
     }
 
     const existing = await db.select().from(votesTable).where(eq(votesTable.voterId, authId))
-    if (existing.length > 0) {
-      return NextResponse.json({ success: false, message: 'Vote already cast' }, { status: 409 })
+    // Prevent duplicate vote per position
+    if (existing.some(v => (v as any).position === position)) {
+      return NextResponse.json({ success: false, message: 'You have already voted for this position' }, { status: 409 })
     }
 
-    await db.insert(votesTable).values({ voterId: authId, choice, createdAt: new Date() })
+    await db.insert(votesTable).values({ voterId: authId, position, nominationId, createdAt: new Date() })
 
     return NextResponse.json({ success: true })
   } catch (error) {
