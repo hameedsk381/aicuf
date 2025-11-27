@@ -103,7 +103,9 @@ export async function POST(req: Request) {
       await db.insert(schema.voterPasskeyCredentials).values(credentialData)
 
       await deleteChallenge(`voter_register_challenge:${voterId}`)
-      return NextResponse.json({ success: true })
+      const res = NextResponse.json({ success: true })
+      res.cookies.set('voter_register_challenge', '', { maxAge: 0, path: '/' })
+      return res
     }
 
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })

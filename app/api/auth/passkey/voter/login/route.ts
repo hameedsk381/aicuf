@@ -72,13 +72,21 @@ export async function POST(req: Request) {
       console.log('Using discoverable credentials mode (no allowCredentials). rpID:', getRpID())
       const options = await generateAuthenticationOptions({ rpID: getRpID(), userVerification: 'required', timeout: 60000 })
 
-      await setChallenge(`voter_login_challenge:${voterId}`, options.challenge, 60)
+      await setChallenge(`voter_login_challenge:${voterId}`, options.challenge, 300)
 
-      return NextResponse.json(options)
+      const res = NextResponse.json(options)
+      res.cookies.set('voter_login_challenge', options.challenge, {
+        httpOnly: true,
+        sameSite: 'lax',
+        maxAge: 300,
+        path: '/',
+      })
+      return res
     }
 
     if (step === 'verify' && assertionResponse) {
-      const expected = await getChallenge(`voter_login_challenge:${voterId}`)
+      const cookieChallenge = (req as any).cookies?.get?.('voter_login_challenge')?.value
+      const expected = cookieChallenge || await getChallenge(`voter_login_challenge:${voterId}`)
       if (!expected) return NextResponse.json({ error: 'Challenge expired or not found' }, { status: 400 })
 
       const voter = await db.query.voters.findFirst({ where: eq(schema.voters.voterId, voterId) })
@@ -122,7 +130,7 @@ export async function POST(req: Request) {
       })
 
       await deleteChallenge(`voter_login_challenge:${voterId}`)
-
+      response.cookies.set('voter_login_challenge', '', { maxAge: 0, path: '/' })
       return response
     }
 
