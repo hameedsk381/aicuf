@@ -69,16 +69,8 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'No passkeys registered for this voter. Please register your passkey first.' }, { status: 404 })
       }
 
-      const allowCredentials = creds.map(c => ({ id: base64ToBase64url(c.credentialId), type: 'public-key' as const, transports: ['internal'] }))
-
-      console.log('Sending allowCredentials to browser:', {
-        rpID: getRpID(),
-        credentialCount: allowCredentials.length,
-        credentialIdPreviews: allowCredentials.map(c => c.id.substring(0, 20) + '...')
-      })
-
-      const allowCredentialsTyped = allowCredentials.map(c => ({ id: c.id, transports: c.transports as AuthenticatorTransport[] }))
-      const options = await generateAuthenticationOptions({ rpID: getRpID(), userVerification: 'required', timeout: 60000, allowCredentials: allowCredentialsTyped })
+      console.log('Using discoverable credentials mode (no allowCredentials). rpID:', getRpID())
+      const options = await generateAuthenticationOptions({ rpID: getRpID(), userVerification: 'required', timeout: 60000 })
 
       await setChallenge(`voter_login_challenge:${voterId}`, options.challenge, 60)
 
