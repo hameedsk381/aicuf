@@ -6,13 +6,11 @@ import { Button } from "@/components/ui/button"
 
 export default function CastVoteForm() {
   const [voterId, setVoterId] = useState("")
-  const [choice, setChoice] = useState("")
   const [step, setStep] = useState<"id" | "auth" | "vote" | "done">("id")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [positions, setPositions] = useState<{ position: string; candidates: { id: number; name: string; unitName: string }[] }[]>([])
-  const [selectedPosition, setSelectedPosition] = useState<string>("")
-  const [selectedNominationId, setSelectedNominationId] = useState<number | null>(null)
+  const [selections, setSelections] = useState<Record<string, number | null>>({})
 
   const startAuth = async () => {
     setIsLoading(true)
@@ -65,6 +63,11 @@ export default function CastVoteForm() {
       const optionsData = await optionsRes.json()
       if (!optionsRes.ok || !optionsData.success) throw new Error(optionsData.message || 'Failed to load election options')
       setPositions(optionsData.positions)
+      const init: Record<string, number | null> = {}
+      for (const p of optionsData.positions as any[]) {
+        init[p.position] = null
+      }
+      setSelections(init)
       setStep("vote")
     } catch (e) {
       console.error("Passkey authentication error:", e)
@@ -81,7 +84,7 @@ export default function CastVoteForm() {
       const res = await fetch("/api/vote/cast", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ voterId, position: selectedPosition, nominationId: selectedNominationId }),
+        body: JSON.stringify({ voterId, selections: Object.entries(selections).map(([position, nominationId]) => ({ position, nominationId })) }),
         credentials: "include",
       })
       const data = await res.json()
@@ -121,33 +124,29 @@ export default function CastVoteForm() {
       )}
       {step === "vote" && (
         <>
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <label className="text-sm font-light">Select Position</label>
-              <select className="border px-2 py-2" value={selectedPosition} onChange={(e) => { setSelectedPosition(e.target.value); setSelectedNominationId(null) }}>
-                <option value="">Select position</option>
-                {positions.map(p => (
-                  <option key={p.position} value={p.position}>{p.position}</option>
-                ))}
-              </select>
-            </div>
-
-            {selectedPosition && (
-              <div className="grid gap-2">
-                <label className="text-sm font-light">Select Candidate</label>
+          <div className="grid gap-6">
+            {positions.map(p => (
+              <div key={p.position} className="grid gap-2">
+                <label className="text-sm font-light">{p.position}</label>
                 <div className="grid gap-2">
-                  {positions.find(p => p.position === selectedPosition)?.candidates.map(c => (
+                  {p.candidates.map(c => (
                     <label key={c.id} className="flex items-center gap-2">
-                      <input type="radio" name="candidate" value={c.id} checked={selectedNominationId === c.id} onChange={() => setSelectedNominationId(c.id)} />
+                      <input
+                        type="radio"
+                        name={`candidate-${p.position}`}
+                        value={c.id}
+                        checked={selections[p.position] === c.id}
+                        onChange={() => setSelections(prev => ({ ...prev, [p.position]: c.id }))}
+                      />
                       <span className="text-sm">{c.name} — {c.unitName}</span>
                     </label>
                   ))}
                 </div>
               </div>
-            )}
+            ))}
           </div>
 
-          <Button onClick={castVote} disabled={!selectedPosition || !selectedNominationId || isLoading} className="rounded-none bg-maroon hover:bg-maroon/90 text-white mt-4">
+          <Button onClick={castVote} disabled={Object.values(selections).some(v => v == null) || isLoading} className="rounded-none bg-maroon hover:bg-maroon/90 text-white mt-4">
             {isLoading ? "Submitting..." : "Cast Vote"}
           </Button>
         </>

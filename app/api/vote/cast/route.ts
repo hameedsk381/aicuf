@@ -18,11 +18,10 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
     const voterId = sanitizeInput(body.voterId || '')
-    const position = sanitizeInput(body.position || '')
-    const nominationId = parseInt(body.nominationId)
+    const selections = Array.isArray(body.selections) ? body.selections : []
 
-    if (!voterId || !position || !nominationId) {
-      return NextResponse.json({ success: false, message: 'voterId, position and nominationId are required' }, { status: 400 })
+    if (!voterId || selections.length === 0) {
+      return NextResponse.json({ success: false, message: 'voterId and selections are required' }, { status: 400 })
     }
 
     if (voterId !== authVoterId) {
@@ -35,12 +34,45 @@ export async function POST(req: NextRequest) {
     }
 
     const existing = await db.select().from(votesTable).where(eq(votesTable.voterId, authId))
-    // Prevent duplicate vote per position
-    if (existing.some(v => (v as any).position === position)) {
-      return NextResponse.json({ success: false, message: 'You have already voted for this position' }, { status: 409 })
+    if (existing.length > 0) {
+      return NextResponse.json({ success: false, message: 'You have already submitted your ballot' }, { status: 409 })
     }
 
-    await db.insert(votesTable).values({ voterId: authId, position, nominationId, createdAt: new Date() })
+    const approved = await db.select().from(schema.nominations).where(eq(schema.nominations.status, 'approved'))
+    const byId: Record<number, { contestingFor: string }> = {}
+    for (const n of approved as any[]) {
+      byId[n.id] = { contestingFor: n.contestingFor }
+    }
+
+    const positionsSeen = new Set<string>()
+    for (const sel of selections) {
+      const pos = sanitizeInput(sel.position || '')
+      const nomId = parseInt(sel.nominationId)
+      if (!pos || !nomId) {
+        return NextResponse.json({ success: false, message: 'Invalid selection payload' }, { status: 400 })
+      }
+      if (positionsSeen.has(pos)) {
+        return NextResponse.json({ success: false, message: 'Duplicate position in selections' }, { status: 400 })
+      }
+      positionsSeen.add(pos)
+      const nom = byId[nomId]
+      if (!nom || nom.contestingFor !== pos) {
+        return NextResponse.json({ success: false, message: 'Invalid nomination for position' }, { status: 400 })
+      }
+    }
+
+    const values = selections.map((sel: any) => ({
+      voterId: authId,
+      position: sanitizeInput(sel.position),
+      nominationId: parseInt(sel.nominationId),
+      createdAt: new Date(),
+    }))
+
+    if (values.length === 0) {
+      return NextResponse.json({ success: false, message: 'No valid selections to record' }, { status: 400 })
+    }
+
+    await db.insert(votesTable).values(values as any)
 
     return NextResponse.json({ success: true })
   } catch (error) {

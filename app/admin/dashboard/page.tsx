@@ -93,6 +93,7 @@ export default function AdminDashboard() {
     { label: "View Contacts", href: "/admin/contacts", icon: Mail },
     { label: "Newsletter List", href: "/admin/newsletter", icon: Mail },
     { label: "View Voters", href: "/admin/voters", icon: Users },
+    { label: "View Election Results", href: "/admin/election/results", icon: FileText },
   ]
 
   return (
