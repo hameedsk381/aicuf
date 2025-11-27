@@ -2,37 +2,22 @@ import { NextResponse } from 'next/server'
 import { db, schema } from '@/lib/db'
 import { eq } from 'drizzle-orm'
 import { generateRegistrationOptions, verifyRegistrationResponse } from '@simplewebauthn/server'
-import { redis } from '@/lib/redis'
+// Using in-memory store for challenges (can be replaced with Redis in production)
 
 // Fallback in-memory storage when Redis is unavailable
 const memoryStore: Record<string, string> = {}
 
 async function setChallenge(key: string, value: string, ttlSeconds: number): Promise<void> {
-  try {
-    await redis.set(key, value, 'EX', ttlSeconds)
-  } catch (error) {
-    console.warn('Redis unavailable, using in-memory storage:', error instanceof Error ? error.message : error)
-    memoryStore[key] = value
-    setTimeout(() => delete memoryStore[key], ttlSeconds * 1000)
-  }
+  memoryStore[key] = value
+  setTimeout(() => delete memoryStore[key], ttlSeconds * 1000)
 }
 
 async function getChallenge(key: string): Promise<string | null> {
-  try {
-    return await redis.get(key)
-  } catch (error) {
-    console.warn('Redis unavailable, using in-memory storage:', error instanceof Error ? error.message : error)
-    return memoryStore[key] || null
-  }
+  return memoryStore[key] || null
 }
 
 async function deleteChallenge(key: string): Promise<void> {
-  try {
-    await redis.del(key)
-  } catch (error) {
-    console.warn('Redis unavailable, using in-memory storage:', error instanceof Error ? error.message : error)
-    delete memoryStore[key]
-  }
+  delete memoryStore[key]
 }
 
 function getRpID(): string {
@@ -60,13 +45,14 @@ export async function POST(req: Request) {
       const options = await generateRegistrationOptions({
         rpName: 'APTSAICUF',
         rpID: getRpID(),
-        userID: new TextEncoder().encode(voter.id.toString()),
+        userID: new Uint8Array(Buffer.from(voter.id.toString())),
         userName: voter.voterId,
         timeout: 60000,
         attestationType: 'none',
         authenticatorSelection: {
-          residentKey: 'preferred',
-          userVerification: 'preferred',
+          residentKey: 'required',
+          userVerification: 'required',
+          authenticatorAttachment: 'platform',
         },
       })
 
