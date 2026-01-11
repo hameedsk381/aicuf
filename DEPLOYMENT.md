@@ -50,21 +50,16 @@ git push origin main
 
 ### 4. Database Setup
 
-**Option 1: Run Migrations After First Deployment (Recommended)**
+**Run Migrations After Deployment (Recommended)**
 
-After your app is deployed in Dokploy:
+Using migrations ensures your production database matches your local schema exactly and prevents accidental data loss.
 
 1. Go to your app's terminal/console in Dokploy
-2. Run: `bun run db:push`
-3. This applies your schema to the production database
+2. Run: `bun run db:migrate`
+3. This applies the SQL files in the `/drizzle` folder to your production database.
 
-**Option 2: Use Dokploy's PostgreSQL Service**
-
-If using Dokploy's built-in PostgreSQL:
-1. Create PostgreSQL service in Dokploy
-2. Link it to your application
-3. Database will be auto-created
-4. Run `bun run db:push` in app terminal to apply schema
+**Alternatively, for initial setup only:**
+You can use `bun run db:push` for the very first deployment if you haven't generated migration files yet, but `db:migrate` is preferred for ongoing updates.
 
 ### 5. Deploy
    - Click "Deploy" button
@@ -94,11 +89,11 @@ Visit your domain and test:
 
 ## Database Migrations
 
-**After deployment, run migrations manually:**
+**To apply schema changes to production:**
 
-1. In Dokploy, go to your app
-2. Open the Terminal/Console
-3. Run: `bun run db:push`
+1. In your local development, run: `bun run db:generate` to create new migration files.
+2. Commit and push the new files in the `/drizzle` folder.
+3. In Dokploy console, run: `bun run db:migrate`.
 
 This applies your database schema (tables, columns, etc.) to production.
 

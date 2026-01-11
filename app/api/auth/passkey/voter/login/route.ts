@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { db, schema } from '@/lib/db'
 import { eq } from 'drizzle-orm'
 import { generateAuthenticationOptions, verifyAuthenticationResponse } from '@simplewebauthn/server'
+import { normalizeVoterId, getRpID, getExpectedOrigin, validateOrigin } from '@/lib/webauthn-utils'
+
 // Using in-memory store for challenges (can be replaced with Redis in production)
 
 // Fallback in-memory storage when Redis is unavailable
@@ -30,22 +32,17 @@ function base64urlToBase64(base64url: string): string {
   return base64
 }
 
-function getRpID(): string {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://aptsaicuf.com'
-  try {
-    return new URL(siteUrl).hostname
-  } catch (e) {
-    return 'aptsaicuf.com'
-  }
-}
-
-function getExpectedOrigin(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL || 'https://aptsaicuf.com'
-}
-
 export async function POST(req: Request) {
   try {
-    const { voterId, step, assertionResponse } = await req.json()
+    const origin = req.headers.get('origin')
+    validateOrigin(origin)
+
+    let { voterId, step, assertionResponse } = await req.json()
+    voterId = normalizeVoterId(voterId)
+
+    if (!voterId) {
+      return NextResponse.json({ error: 'Voter ID is required' }, { status: 400 })
+    }
 
     if (step === 'options') {
       const voter = await db.query.voters.findFirst({ where: eq(schema.voters.voterId, voterId) })
