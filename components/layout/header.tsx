@@ -42,23 +42,17 @@ export default function Header() {
   const navItems = [
     { href: "/", label: "Home" },
     { href: "/about", label: "About" },
-    { href: "/mission", label: "Mission" },
     { href: "/programs", label: "Programs" },
     { href: "/events", label: "Events" },
     { href: "/news", label: "News" },
-    { href: "/gallery", label: "Gallery" },
     { href: "/contact", label: "Contact" },
-    { href: "/voter/register", label: "Voter Registration" },
-    { href: "/vote", label: "Cast Vote" },
-    { href: "/register", label: "Join APTSAICUF" },
   ]
 
   return (
     <>
       <header
-        className={`sticky top-0 z-50 w-full backdrop-blur-md transition-all duration-300 ${
-          scrollY > 50 ? "bg-white/90 shadow-sm" : "bg-transparent"
-        }`}
+        className={`sticky top-0 z-50 w-full backdrop-blur-md transition-all duration-300 ${scrollY > 50 ? "bg-white/90 shadow-sm" : "bg-transparent"
+          }`}
         role="banner"
       >
         <div className="container flex h-16 items-center justify-between">
@@ -81,31 +75,45 @@ export default function Header() {
               </div>
             </Link>
           </motion.div>
-          <motion.nav 
-            variants={navVariants} 
-            initial="hidden" 
-            animate="visible" 
-            className="hidden md:flex gap-8"
+          <motion.nav
+            variants={navVariants}
+            initial="hidden"
+            animate="visible"
+            className="hidden lg:flex gap-8 items-center"
             role="navigation"
             aria-label="Main navigation"
           >
-            {navItems.map((item) => (
+            {[
+              { href: "/", label: "Home" },
+              { href: "/about", label: "About" },
+              { href: "/programs", label: "Programs" },
+              { href: "/events", label: "Events" },
+              { href: "/news", label: "News" },
+              { href: "/contact", label: "Contact" },
+            ].map((item) => (
               <motion.div key={item.label} variants={itemVariants}>
-                <Link 
-                  href={item.href} 
-                  className="text-sm font-light hover:text-primary transition-colors"
+                <Link
+                  href={item.href}
+                  className="text-sm font-medium text-foreground/80 hover:text-maroon transition-colors"
                   aria-label={`Navigate to ${item.label}`}
                 >
                   {item.label}
                 </Link>
               </motion.div>
             ))}
+            <motion.div variants={itemVariants}>
+              <Link href="/register">
+                <Button className="h-9 px-6 bg-maroon hover:bg-maroon/90 text-white rounded-full">
+                  Join Us
+                </Button>
+              </Link>
+            </motion.div>
           </motion.nav>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="md:hidden text-maroon" 
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden text-maroon"
               onClick={() => setIsMenuOpen(true)}
               aria-label="Open navigation menu"
               aria-expanded={isMenuOpen}

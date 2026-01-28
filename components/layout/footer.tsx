@@ -86,6 +86,14 @@ export default function Footer() {
             >
               Cookie Policy
             </Link>
+            <a
+              href="https://hamathopc.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors font-extralight"
+            >
+              Built by Hamath OPC Pvt Ltd
+            </a>
           </div>
         </div>
       </div>

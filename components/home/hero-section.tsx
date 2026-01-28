@@ -40,35 +40,34 @@ export default function HeroSection() {
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeInUp}
-            className="flex flex-col justify-center space-y-4"
+            className="flex flex-col justify-center space-y-8"
           >
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="h-1 w-12 bg-maroon"></div>
-                <span className="text-sm font-light text-maroon">Celebrating 100 Years</span>
+            <div className="space-y-4">
+              <div className="inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium text-maroon bg-red-50 w-fit">
+                <span className="flex h-2 w-2 rounded-full bg-maroon mr-2"></span>
+                Celebrating 100 Years
               </div>
-              <h1 className="text-3xl font-light tracking-tighter sm:text-5xl xl:text-6xl/none text-maroon">
-                Andhra-Telangana All India Catholic University Federation
+              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl xl:text-6xl/none text-foreground">
+                Andhra-Telangana <span className="text-maroon">All India Catholic University Federation</span>
               </h1>
-              <p className="max-w-[600px] text-muted-foreground md:text-xl font-extralight">
-                Empowering Catholic students to be agents of social change through faith, justice, and leadership since
-                1924.
+              <p className="max-w-[600px] text-muted-foreground text-lg md:text-xl leading-relaxed">
+                Empowering Catholic students to be agents of social change through faith, justice, and leadership since 1924.
               </p>
             </div>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6, duration: 0.5 }}
-              className="flex flex-col gap-2 min-[400px]:flex-row pt-4"
+              className="flex flex-col gap-4 min-[400px]:flex-row pt-4"
             >
               <Link href="/register">
-                <Button className="inline-flex h-10 items-center justify-center rounded-none px-8 bg-maroon hover:bg-maroon/90 text-white">
-                  Join APTSAICUF
+                <Button className="h-12 px-8 text-lg font-medium bg-maroon hover:bg-maroon/90 text-white shadow-lg transition-transform hover:scale-105">
+                  Join APTSAICUF Today
                 </Button>
               </Link>
               <Button
                 variant="outline"
-                className="inline-flex h-10 items-center justify-center rounded-none border-primary hover:bg-blue-50 text-primary"
+                className="h-12 px-8 text-lg font-medium border-2 hover:bg-accent hover:text-accent-foreground transition-all"
               >
                 Learn More
               </Button>
